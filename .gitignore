@@ -1,0 +1,55 @@
+# secrets: real values live only in git-ignored env files
+.env
+.env.*
+!.env.example
+openclaw/openclaw.env
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+
+# per-machine state written by setup (progress, notes, recordings, login state)
+data/
+materials/
+openclaw/
+tailscale/
+backups/
+setup/profiles.txt
+*.db
+*.sqlite
+*.sqlite3
+
+# personal study files
+*.pdf
+*.epub
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+dist/
+build/
+
+# node
+node_modules/
+npm-debug.log*
+
+# logs, caches, editor, os
+*.log
+*.ses
+*.tmp
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

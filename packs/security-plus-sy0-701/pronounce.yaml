@@ -1,0 +1,25 @@
+# How the voices say terms. The screen always shows the written form; only speech uses these.
+# Longest written form first. Matches are whole words or symbols, and they are case-sensitive.
+rules:
+  - {written: "SY0-701", say: "S Y zero seven oh one"}
+  - {written: "802.1X", say: "eight oh two dot one X"}
+  - {written: "CIA triad", say: "C I A triad"}
+  - {written: "IPsec", say: "eye P sec"}
+  - {written: "SIEM", say: "sim"}
+  - {written: "SOAR", say: "soar"}
+  - {written: "CIA", say: "C I A"}
+  - {written: "MFA", say: "M F A"}
+  - {written: "DNS", say: "D N S"}
+  - {written: "TLS", say: "T L S"}
+  - {written: "SSH", say: "S S H"}
+  - {written: "IDS", say: "I D S"}
+  - {written: "IPS", say: "I P S"}
+  - {written: "3389", say: "three three eight nine"}
+  - {written: "443", say: "four four three"}
+  - {written: "53", say: "fifty three"}
+  - {written: "22", say: "twenty two"}
+  - {written: "80", say: "eighty"}
+  - {written: "e.g.", say: "for example"}
+  - {written: "i.e.", say: "that is"}
+  - {written: "etc.", say: "et cetera"}
+  - {written: "vs.", say: "versus"}

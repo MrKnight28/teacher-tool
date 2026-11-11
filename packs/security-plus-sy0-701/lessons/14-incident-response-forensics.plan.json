@@ -1,0 +1,361 @@
+{
+ "objectives": [
+  "4.8",
+  "4.9"
+ ],
+ "title": "Incident Response and Forensics",
+ "sections": [
+  {
+   "stage": "intro",
+   "title": "When something goes wrong",
+   "objectives": [
+    "4.8",
+    "4.9"
+   ],
+   "content": [
+    "4.8: the response process, digital forensics, legal duties",
+    "4.9: the logs and data sources that power an investigation",
+    "Phase ORDER is heavily tested"
+   ],
+   "examples": [
+    "Ransomware hits a file server on Friday night: who does what, in which order, and what must be kept?"
+   ],
+   "say": [
+    "Today is about the worst day at work: an attack has actually happened. The exam wants you to know the steps a response team follows, in the right order, and how to handle anything that might end up in court.",
+    "We will also look at where investigators find the truth, which logs to check early, and the legal clocks that start ticking after a breach."
+   ],
+   "checks": [
+    {
+     "question": "If you found ransomware on a work laptop, what would your very first instinct be, and why might that instinct be risky?",
+     "expect": "Many people would switch it off or wipe it; that can destroy volatile evidence such as memory, so it should be isolated and handled by the process instead.",
+     "objective": "4.8"
+    }
+   ]
+  },
+  {
+   "stage": "teaching",
+   "title": "The response lifecycle",
+   "objectives": [
+    "4.8"
+   ],
+   "content": [
+    "1 Preparation, 2 Detection, 3 Analysis",
+    "4 Containment, 5 Eradication, 6 Recovery",
+    "7 Lessons learned, which feeds back into Preparation",
+    "Memory trick: People Don't Always Contain Every Ransomware Leak"
+   ],
+   "examples": [
+    "Isolate the infected server from the network (containment), remove the malware (eradication), restore from clean backups (recovery), then hold a review meeting (lessons learned)"
+   ],
+   "say": [
+    "Incident response is a structured process, and the order is what gets tested. Preparation comes before anything goes wrong: the plan, the tools, the trained people. Then you spot something, work out what it really is and how far it has spread.",
+    "Containment stops the damage spreading, for example by unplugging a host from the network. Eradication removes the cause, recovery brings systems back to normal, and the lessons learned meeting improves the plan for the next time.",
+    "A classic trap is jumping to eradication or recovery first. If you wipe and restore before isolating the threat, the attacker may still be inside and simply reinfect the clean systems."
+   ],
+   "misconceptions": [
+    {
+     "belief": "Lessons learned is optional once systems are back up.",
+     "correction": "It is a formal phase that feeds back into preparation, so the same attack does not succeed twice."
+    }
+   ],
+   "checks": [
+    {
+     "question": "Recite the seven phases in order using the memory trick.",
+     "expect": "Preparation, detection, analysis, containment, eradication, recovery, lessons learned.",
+     "objective": "4.8"
+    },
+    {
+     "question": "A team rebuilds a server from backup before working out how the attacker got in. Which phases did they skip or rush?",
+     "expect": "Analysis and containment, and probably eradication, so the attacker could still be present and reinfect it.",
+     "objective": "4.8"
+    }
+   ]
+  },
+  {
+   "stage": "teaching",
+   "title": "Order of volatility",
+   "objectives": [
+    "4.8"
+   ],
+   "content": [
+    "Collect the most FRAGILE data first",
+    "1 CPU registers and cache",
+    "2 Routing table, ARP cache, process table, kernel statistics, memory (RAM)",
+    "3 Temp files and swap, 4 disk, 5 remote logs and monitoring data",
+    "6 Physical configuration and network topology, 7 archival media"
+   ],
+   "examples": [
+    "Capture RAM BEFORE pulling the plug: an encryption key or a fileless malware sample may only exist in memory"
+   ],
+   "say": [
+    "Volatility just means how quickly data disappears. Registers and cache change in nanoseconds. Next is everything the running system holds in memory: its routing and address tables, the list of processes, kernel statistics and the memory itself, all gone at power-off.",
+    "Below that, temporary files and swap linger a little longer, then the disk survives a reboot, remote logs sit on another system, and backups on a shelf last for years.",
+    "So the rule is simple: grab whatever will vanish soonest, then work your way down to the stable stuff. Pulling the power cable straight away throws away everything at the top of the list."
+   ],
+   "misconceptions": [
+    {
+     "belief": "The first thing to do with a compromised machine is switch it off to stop the attack.",
+     "correction": "Switching off destroys memory contents; capture the volatile data first and isolate the machine from the network instead."
+    }
+   ],
+   "checks": [
+    {
+     "question": "You can collect either the contents of memory or a copy of the hard drive first. Which, and why?",
+     "expect": "Memory first, because it is lost at power-off, while the disk persists.",
+     "objective": "4.8"
+    }
+   ]
+  },
+  {
+   "stage": "teaching",
+   "title": "Forensics essentials",
+   "objectives": [
+    "4.8"
+   ],
+   "content": [
+    "Chain of custody: who handled it, when, and what they did. Broken chain = inadmissible",
+    "Forensic copy: bit-for-bit image. ALWAYS analyse the copy, never the original",
+    "Write blocker: hardware or software that stops any writes to the source drive",
+    "Legal hold: litigation expected, so suspend deletion policies IMMEDIATELY"
+   ],
+   "examples": [
+    "A seized laptop drive is connected through a write blocker, imaged, and the log notes each person who signed it out and back in"
+   ],
+   "say": [
+    "Treat every item as if a court will look at it. The custody log is a paper trail of every hand it passed through; one unexplained gap and the other side can argue it was tampered with.",
+    "You never investigate the original drive. You take an exact bit-level image, through a device that physically stops anything being written, and confirm the copy matches the original using a hash.",
+    "A legal hold comes from the lawyers. The moment a lawsuit is expected, routine deletion such as email retention clean-ups must stop, or the company could be accused of destroying evidence."
+   ],
+   "misconceptions": [
+    {
+     "belief": "Looking around the original drive is fine as long as nothing is deleted.",
+     "correction": "Even opening files can change timestamps and metadata, so all analysis is done on a verified copy."
+    }
+   ],
+   "checks": [
+    {
+     "question": "Why use a write blocker when imaging a suspect's drive?",
+     "expect": "So nothing on the original is altered during copying, keeping it intact and admissible.",
+     "objective": "4.8"
+    },
+    {
+     "question": "A company expects to be sued over a data leak. What must happen to its automatic email deletion policy?",
+     "expect": "It must be suspended immediately under a legal hold so relevant data is kept.",
+     "objective": "4.8"
+    }
+   ]
+  },
+  {
+   "stage": "teaching",
+   "title": "Investigation data sources",
+   "objectives": [
+    "4.9"
+   ],
+   "content": [
+    "DNS logs: malware must resolve its C2 domains. Check EARLY",
+    "CloudTrail: the AWS API call log, the cloud investigation goldmine",
+    "Timestomping: attacker fakes file timestamps. Corroborate from MULTIPLE sources"
+   ],
+   "examples": [
+    "A file claims to be from 2019, but DNS and firewall logs show the host first contacted the attacker's domain last Tuesday"
+   ],
+   "say": [
+    "Malware almost always has to look up the name of its command and control server before it can phone home, so name lookup logs quickly reveal which machines are infected and where they were calling.",
+    "In Amazon Web Services, every action taken through the management interface or its programming interface is recorded by CloudTrail: who created that user, who opened that storage bucket, and from which address.",
+    "Attackers know investigators love timestamps, so they fake them. Never trust one clock. Line up the file times with logs from other systems, and if they disagree, the outside logs usually win."
+   ],
+   "misconceptions": [
+    {
+     "belief": "A file's created date tells you exactly when the attacker dropped it.",
+     "correction": "Timestamps can be forged by timestomping, so they must be checked against independent logs."
+    }
+   ],
+   "checks": [
+    {
+     "question": "Why are name lookup logs so useful when you are hunting for infected machines?",
+     "expect": "Because malware has to resolve its command and control domain, so the logs show which hosts asked for it.",
+     "objective": "4.9"
+    },
+    {
+     "question": "Someone deleted a storage bucket in your company's Amazon cloud. Which log tells you who did it?",
+     "expect": "CloudTrail, which records API calls with the identity and source.",
+     "objective": "4.9"
+    }
+   ]
+  },
+  {
+   "stage": "teaching",
+   "title": "Deadlines and team colours",
+   "objectives": [
+    "4.8"
+   ],
+   "content": [
+    "GDPR: 72 HOURS to notify the supervisory authority, e.g. the ICO. Fines up to EUR 20m or 4% of global turnover",
+    "HIPAA: 60 DAYS to notify affected individuals; breaches of 500+ also reported to the regulator and media. Applies to business associates too",
+    "Red: offensive. Blue: detect and respond",
+    "Purple: both sides share findings"
+   ],
+   "examples": [
+    "A UK retailer discovers a customer data breach on Monday 9am: the ICO must hear by Thursday 9am"
+   ],
+   "say": [
+    "Two numbers to memorise. Under the General Data Protection Regulation, GDPR, you have seventy-two hours from becoming aware to tell the regulator, which in the UK is the Information Commissioner's Office. HIPAA, the American health privacy law, gives sixty days to tell the patients affected.",
+    "HIPAA also reaches beyond hospitals to their business associates, such as a billing company handling patient data.",
+    "Red teams play the attacker and blue teams defend. On their own, the red side writes a report and leaves. When they sit with the defenders, share techniques live, and tune detections together, you get the purple approach."
+   ],
+   "misconceptions": [
+    {
+     "belief": "Under GDPR you have 72 days to report a breach.",
+     "correction": "It is 72 hours, not days; the sixty-day deadline belongs to HIPAA, and that one is for telling the patients."
+    }
+   ],
+   "checks": [
+    {
+     "question": "Which deadline is measured in hours and which in days, and who is notified in each case?",
+     "expect": "GDPR is 72 hours to the supervisory authority; HIPAA is 60 days to the affected individuals.",
+     "objective": "4.8"
+    }
+   ]
+  },
+  {
+   "stage": "guided_practice",
+   "title": "Ransomware on a Friday night",
+   "objectives": [
+    "4.8",
+    "4.9"
+   ],
+   "content": [
+    "Put the response steps in order",
+    "Decide what to collect first and how to keep it admissible"
+   ],
+   "examples": [
+    "Isolate first, capture memory, image the disk through a write blocker"
+   ],
+   "say": [
+    "Let's work through a realistic case. Talk me through it as if you were the lead responder, and use the exact phase names the exam uses.",
+    "Remember there are two jobs at once here: stopping the damage, and protecting anything the lawyers or police may need."
+   ],
+   "checks": [
+    {
+     "question": "The junior admin wants to pull the power cable on the infected server right now. What do you tell them?",
+     "expect": "Do not power off; isolate it from the network and capture volatile data such as memory first.",
+     "objective": "4.8"
+    }
+   ],
+   "application": {
+    "scenario": "A UK online shop finds ransomware on its customer database server at 11pm on Friday. The server is still powered on. Customer card details may have been copied out. Management expects legal action from customers. The shop's systems run partly in Amazon Web Services.",
+    "question": "Walk me through your first actions in phase order, what you collect and in what order, which logs you check, and any legal deadlines.",
+    "expect": "Contain by isolating the server from the network; capture memory and running state before disk, then image the disk with a write blocker and analyse the copy; record chain of custody; place a legal hold on deletion; check DNS logs for command and control and CloudTrail for cloud activity; notify the ICO within 72 hours; then eradicate, recover and hold lessons learned.",
+    "objective": "4.9"
+   }
+  },
+  {
+   "stage": "review",
+   "title": "Key distinctions and traps",
+   "objectives": [
+    "4.8",
+    "4.9"
+   ],
+   "content": [
+    "People Don't Always Contain Every Ransomware Leak",
+    "Most volatile first: registers and cache, memory and system tables, temp and swap, disk, remote logs, archives",
+    "Analyse the copy, never the original",
+    "GDPR 72 hours, HIPAA 60 days",
+    "Red attacks, blue defends, purple shares"
+   ],
+   "examples": [
+    "DNS logs early, CloudTrail for AWS, corroborate timestamps"
+   ],
+   "say": [
+    "The order questions are free marks if you have the trick fixed in your head, so say it to yourself until it is automatic.",
+    "Most wrong answers in this topic come from doing the obvious thing too soon: switching off, wiping, restoring, or looking at the original drive. Slow down, preserve, then act.",
+    "And watch for hours versus days on the notification questions."
+   ],
+   "checks": [
+    {
+     "question": "Which comes straight after eradication, and which straight before it?",
+     "expect": "Recovery comes after eradication; containment comes before it.",
+     "objective": "4.8"
+    }
+   ]
+  }
+ ],
+ "retrieval": [
+  {
+   "question": "If your bank told you your card details had been stolen, what would you want them to tell you, and how quickly?",
+   "expect": "What was taken, what they are doing about it, and what to do next, as soon as possible.",
+   "objective": "4.8"
+  },
+  {
+   "question": "What kind of information do you think a computer keeps in memory that it loses when switched off?",
+   "expect": "Running programs, open network connections, unsaved data and things like encryption keys.",
+   "objective": "4.8"
+  }
+ ],
+ "exam_questions": [
+  {
+   "objective": "4.8",
+   "q": "What is the purpose of incident containment?",
+   "options": [
+    "Erase all evidence immediately",
+    "Skip analysis",
+    "Approve a new policy",
+    "Limit the spread or impact of the incident"
+   ],
+   "answer": "Limit the spread or impact of the incident",
+   "why": "Containment, such as isolating an infected host, stops the damage growing while keeping the systems available for investigation before eradication and recovery."
+  },
+  {
+   "objective": "4.8",
+   "q": "Why should forensic evidence maintain chain of custody?",
+   "options": [
+    "To prove how evidence was handled and preserve its evidentiary value",
+    "To increase bandwidth",
+    "To replace backups",
+    "To make passwords stronger"
+   ],
+   "answer": "To prove how evidence was handled and preserve its evidentiary value",
+   "why": "A documented record of who handled the evidence, when and what they did shows it was not tampered with; a broken chain can make it inadmissible in court."
+  },
+  {
+   "objective": "4.8",
+   "q": "Which team exercise uses defenders and attackers working together to improve security?",
+   "options": [
+    "Only blue team",
+    "Purple team",
+    "Only red team",
+    "CAB"
+   ],
+   "answer": "Purple team",
+   "why": "A purple team brings the red attackers and blue defenders together to share findings, so detections improve straight away."
+  },
+  {
+   "objective": "4.9",
+   "q": "An analyst suspects a workstation is infected and wants to see which external command-and-control domains it tried to reach. Which data source should be checked first?",
+   "options": [
+    "Badge reader logs",
+    "Printer audit logs",
+    "DNS query logs",
+    "HR leaver records"
+   ],
+   "answer": "DNS query logs",
+   "why": "Malware has to resolve its command-and-control domain names before connecting, so DNS logs show which hosts looked them up and when."
+  }
+ ],
+ "source_review": {
+  "added_facts": [
+   "What each phase does (preparation is plans, tools and training; containment isolates; eradication removes the cause; recovery restores) and that lessons learned feeds back into preparation.",
+   "Image integrity is confirmed by comparing hashes of the copy and the original.",
+   "Opening files on an original drive can change timestamps and metadata.",
+   "GDPR's 72 hours runs from becoming aware of the breach; the fine is the higher of EUR 20m or 4% of annual global turnover.",
+   "HIPAA: all affected individuals are notified within 60 days; breaches of 500 or more are also reported to the regulator (HHS) and the media. The notes' '(500+ breach)' was garbled.",
+   "CloudTrail records the identity and source address of each AWS API call.",
+   "Order of volatility corrected to RFC 3227: CPU registers and cache; then routing table, ARP cache, process table, kernel statistics and memory (RAM) as one tier; then temporary files and swap; disk; remote logs and monitoring data; physical configuration and network topology; archival media. This corrects the notes, which listed RAM and running processes and connections as separate tiers.",
+   "GDPR and HIPAA now named in speech (GDPR expanded once as the General Data Protection Regulation; HIPAA introduced as the American health privacy law)."
+  ],
+  "exam_changes": [
+   "Added a new 4.9 question on DNS logs as the first data source for finding command-and-control lookups, because objective 4.9 had no exam question.",
+   "The three pack questions are unchanged and correct for SY0-701; explanations rewritten for the student."
+  ]
+ }
+}

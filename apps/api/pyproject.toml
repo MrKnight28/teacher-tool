@@ -1,0 +1,15 @@
+[project]
+name = "tutor"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["pyyaml==6.0.3", "tzdata==2026.5"]
+[project.optional-dependencies]
+dev = ["pytest"]
+voice = ["faster-whisper==1.2.1", "kokoro-onnx==0.6.1", "piper-tts==1.8.0", "onnx-asr[cpu]==0.12.0"]   # free local speech; the Docker image installs it. piper-tts is GPL-3.0. onnx-asr (MIT) runs Parakeet for sttbench
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+[tool.setuptools]
+packages = ["tutor", "tutor.bench", "tutor.providers", "tutor.services"]
+[tool.setuptools.package-data]
+tutor = ["ui.html", "admin.html", "assets/*.wav"]

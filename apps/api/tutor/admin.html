@@ -1,0 +1,270 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tutor Admin</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--card:#f4f4f6;--ok:#117a3d;--bad:#b3261e;--acc:#2b59c3;--onacc:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#15161a;--fg:#e8e8ea;--mut:#9a9aa3;--card:#202229;--ok:#58c985;--bad:#ff8a80;--acc:#8ab4ff;--onacc:#10131a}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}.card{background:var(--card);border-radius:10px;padding:14px;margin:12px 0}
+textarea,input,select{font:inherit;width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid var(--mut);background:var(--bg);color:var(--fg)}
+textarea{min-height:180px;font-family:ui-monospace,monospace;font-size:14px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:0;background:var(--acc);color:var(--onacc);cursor:pointer;margin-top:8px}
+label{display:block;margin-top:8px;font-size:.9em;color:var(--mut)}.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.st{font-size:.85em;min-height:1.2em}.ok{color:var(--ok)}.bad{color:var(--bad)}a{color:var(--acc)}
+</style></head><body><main>
+<h1 style="font-size:1.3rem">Tutor admin · <a href="/">back to lesson</a></h1>
+<input id="tok" type="password" placeholder="access token"><button id="load">Load</button> <button id="forget" style="background:var(--mut)">Forget token</button><div id="st" class="st"></div>
+
+<section class="card"><b>Setup &amp; health</b> <span class="st">tests keys, folders and reminder channels</span>
+<div id="checks" class="st">Load to run checks.</div>
+<button id="runchecks">Run checks</button> <button id="sendtest">Send test reminder</button> <button id="writenow">Write today's lesson now</button>
+<div id="events" class="st" style="margin-top:8px"></div>
+<div id="setupinfo" class="st" style="margin-top:8px"></div>
+<div id="timings" class="st" style="margin-top:8px"></div>
+<div id="chains" class="st" style="margin-top:8px"></div>
+<button id="reltimings" style="background:var(--mut)">Refresh timings</button>
+<p class="st">To change keys, WhatsApp, Tailscale or folders, re-run setup on the PC (it keeps your saved secrets): <code>.\setup.ps1</code> on Windows or <code>./setup.sh</code> on Linux.</p></section>
+
+<section class="card"><b>Soul</b> <span class="st">who the tutor is and how it behaves</span>
+<textarea id="soul"></textarea><button data-save="soul">Save soul</button> <button id="resetsoul" style="background:var(--mut)">Reload</button></section>
+
+<section class="card"><b>Context</b> <span class="st">your goals, weak areas, standing instructions</span>
+<textarea id="context"></textarea><button data-save="context">Save context</button></section>
+
+<section class="card"><b>Schedule &amp; reminders</b>
+<div class="row"><div><label>Lesson time</label><input id="lesson_time" placeholder="09:00"></div>
+<div><label>Max WhatsApp messages / day (0-8)</label><input id="max_messages_per_day" type="number" min="0" max="8"></div>
+<div><label>Tone</label><select id="tone"><option>gentle</option><option>firm</option><option>strict</option></select></div></div>
+<div class="row"><div><label>Quiet hours start</label><input id="quiet_start" placeholder="22:00"></div>
+<div><label>Quiet hours end</label><input id="quiet_end" placeholder="07:00"></div>
+<div><label>Late nudges (minutes after start, comma separated)</label><input id="late_nudges_min"></div></div>
+<div class="row"><div><label>WhatsApp evening check-in (HH:MM, blank = off)</label><input id="checkin_time" placeholder="20:00"></div>
+<div><label>Sunday report on WhatsApp</label><select id="weekly_report"><option value="true">on</option><option value="false">off</option></select></div></div>
+<div class="row"><div><label>Rest days (comma separated: mon,tue,...)</label><input id="rest_days"></div>
+<div><label>Chat model (OpenRouter id)</label><input id="chat_model"></div>
+<div><label>Time zone</label><input id="timezone" placeholder="Europe/London"></div>
+<div><label>Monthly spend cap (£)</label><input id="monthly_cap_gbp" type="number" min="0" max="500"></div>
+<div><label>Lesson generator</label><select id="lesson_generator"><option value="true">on: write daily lessons</option><option value="false">off: practice lesson only</option></select></div>
+<div><label>Pause the tutor</label><select id="paused"><option value="false">running</option><option value="true">paused</option></select></div></div>
+<div class="row"><div><label>Exam date (YYYY-MM-DD)</label><input id="exam_date" type="date"></div>
+<div><label>Trip pause from (blank = none)</label><input id="pause_start" type="date"></div>
+<div><label>Trip pause to</label><input id="pause_end" type="date"></div></div>
+<button id="savesettings">Save settings</button> <span id="spend" class="st"></span></section>
+
+<section class="card"><b>Voice</b> <span class="st">speech on this PC is free; Gemini is optional and needs a key</span>
+<div class="row"><div><label>Speech-to-text model (runs on this PC)</label><select id="whisper_model"><option>tiny.en</option><option>base.en</option><option>small.en</option></select>
+<div id="vbench" class="st" style="margin-top:6px"></div>
+<div id="sbench" class="st" style="margin-top:6px"></div></div>
+<div><label>Lesson voice (Read and spoken answers)</label><select id="lesson_voice"><option value="kokoro">Kokoro (local, natural, default)</option><option value="piper">Piper (local, fastest)</option><option value="browser">browser voice (built-in, robotic)</option><option value="gemini">Gemini (optional, cloud, free tier is 10 requests)</option></select>
+<div id="ttsfiles" class="st" style="margin-top:6px"></div></div>
+<div><label>Fallback if the lesson voice fails</label><select id="tts_fallback"><option value="piper">Piper (local)</option><option value="none">none (browser voice)</option></select></div>
+<div><label>Gemini billing (free tier costs nothing and doesn't use the cap)</label><select id="gemini_billing"><option value="free">free tier</option><option value="paid">paid</option></select></div></div>
+<button id="savevoice">Save voice settings</button>
+<div style="margin-top:10px"><b>Pronunciation test</b> <span class="st">the screen keeps the written form; only speech changes</span>
+<input id="pron_in" value="SIEM and SOAR, the CIA triad, 802.1X and IPsec, SY0-701, port 443, e.g., vs. etc."><button id="pronTest">Show how it will be spoken</button>
+<div style="margin-top:10px"><b>Teacher scripts</b> <span class="st">for a lesson written before scripts existed (today's date)</span><br><button id="writeScripts">Write teacher script for today's lesson</button> <span id="scr_out" class="st"></span></div>
+<div id="pron_out" class="st"></div></div></section>
+
+<section class="card"><b>Record speech test samples</b> <span class="st">your own voice, for sttbench; stays on this PC</span>
+<div id="rec" class="st" style="margin-top:8px"></div>
+<div id="recText" style="font-size:1.15em;margin:10px 0;min-height:2.4em"></div>
+<div><button id="recHold" style="user-select:none;touch-action:none">Hold to record</button> <span id="recState" class="st"></span></div>
+<div id="recReview" hidden style="margin-top:8px"><audio id="recPlay" controls></audio>
+ <div style="margin-top:6px"><button id="recKeep">Keep</button> <button id="recAgain" style="background:var(--mut)">Re-record</button> <button id="recSkip" style="background:var(--mut)">Skip</button></div></div>
+<div id="recList" style="margin-top:10px"></div>
+<div style="margin-top:12px"><button id="benchRun">Run sttbench</button> <span id="benchSt" class="st"></span></div>
+<div id="benchProg" class="st" style="margin-top:4px"></div>
+</section>
+<section class="card"><b>Materials</b> <span class="st">.md / .txt, used by chat; your own notes go here</span>
+<div id="mats" class="st"></div>
+<label>File name</label><input id="mname" placeholder="domain4-incident-response.md">
+<label>Content</label><textarea id="mcontent"></textarea><button id="addmat">Add / replace</button>
+<hr><b>Book photos</b> <span class="st">pages are transcribed by your vision model and appended to the file (stays private in data/)</span>
+<label>Save into file</label><input id="pname" placeholder="chapter-04.md">
+<label>Photos (JPEG/PNG/WebP, one or more pages, in order)</label><input id="pfiles" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<button id="addphotos">Transcribe pages</button></section>
+<section class="card"><b>Blind voice test</b> <span class="st">the same sentences in four voices, in random order; the names show after every clip is rated</span>
+<div><button id="btBuild">Build test clips (once, about 30 s)</button> <span id="btMsg" class="st"></span></div>
+<div id="btList"></div><div id="btRes" class="st"></div></section>
+<script>
+const $=id=>document.getElementById(id);
+const hdr=()=>$('tok').value?{Authorization:'Bearer '+$('tok').value}:{};
+async function api(p,b){const r=await fetch(p,{method:b?'POST':'GET',headers:{'Content-Type':'application/json',...hdr()},body:b?JSON.stringify(b):void 0});return{ok:r.ok,d:await r.json()}}
+function say(t,ok){$('st').textContent=t;$('st').className='st '+(ok?'ok':'bad')}
+const TK='tutorToken';  // access token kept on this device only (localStorage); "Forget" clears it
+const stored=()=>{try{return localStorage.getItem(TK)||''}catch(e){return ''}};
+const remember=()=>{try{$('tok').value?localStorage.setItem(TK,$('tok').value):localStorage.removeItem(TK)}catch(e){}};
+$('forget').onclick=()=>{try{localStorage.removeItem(TK)}catch(e){}$('tok').value='';say('Token forgotten on this device',1)};
+const F=['lesson_generator','lesson_time','checkin_time','weekly_report','max_messages_per_day','tone','quiet_start','quiet_end','late_nudges_min','rest_days','chat_model','paused','timezone','monthly_cap_gbp','exam_date','pause_start','pause_end','whisper_model','lesson_voice','tts_fallback','gemini_billing'];
+function renderStt(sb){
+ // Engine comparison from `python3 -m tutor sttbench` (data/sttbench.json). Text only, no innerHTML.
+ const b=$('sbench');b.replaceChildren();
+ if(!sb){b.textContent='Speech engines: not compared yet. On the PC, record samples, then run: docker compose exec api python3 -m tutor sttbench';return}
+ const h=document.createElement('div');h.textContent='Speech engines on your recordings ('+sb.samples.length+' clips, '+sb.reference_words+' words, '+sb.time+'):';b.append(h);
+ const pre=document.createElement('pre');
+ const rows=(sb.rows||[]).map(r=>r.error?(r.label+' ('+r.threads+' threads): '+r.error):[r.label.padEnd(18),String(r.threads).padStart(3),'WER '+(r.wer!=null?r.wer:'-'),'warm '+r.warm_median_ms+' ms','RTF '+r.rtf,'load '+r.cold_load_ms+' ms','RAM '+(r.peak_ram_mb||'n/a')+' MB','acronyms '+(r.acronyms_plain&&r.acronyms_plain.ref?r.acronyms_plain.hit+'/'+r.acronyms_plain.ref:'-')].join('  '));
+ pre.textContent=rows.join('\n');b.append(pre);
+}
+function renderVoice(d){
+ renderStt(d.sttbench);
+ const f=$('ttsfiles');const tf=d.tts||{};f.textContent='Voice files on this PC: Kokoro '+(tf.kokoro?'ready':'missing (run: docker compose exec api python3 -m tutor fetch-voices)')+' · Piper '+(tf.piper?'ready':'missing');
+ const b=$('vbench');b.replaceChildren();const vb=d.voicebench;
+ if(!vb){b.textContent='Speed of each model: not measured yet. On the PC, run: docker compose exec api python3 -m tutor voicebench --all';}
+ else{
+  (vb.whisper||[]).forEach(w=>{const e=document.createElement('div');e.textContent=w.model+': '+w.ms+' ms for a 5-second clip';b.append(e)});
+  const g=vb.gemini;if(g&&!g.error){Object.keys(g).forEach(k=>{const e=document.createElement('div');e.textContent='Gemini '+k.replace('_',' ')+': '+g[k].ms+' ms';b.append(e)})}
+  else if(g&&g.error){const e=document.createElement('div');e.textContent='Gemini bench failed: '+g.error;b.append(e)}
+  const e=document.createElement('div');e.textContent='Measured '+String(vb.time).replace('T',' ');b.append(e);
+ }
+ const t=$('timings');t.replaceChildren();const h=document.createElement('b');h.textContent='Voice timings (last 10 each, cleared on restart)';t.append(h);
+ const tm=d.timings||{server:[],browser:[]};
+ [['Server',tm.server],['Browser',tm.browser]].forEach(([name,rows])=>{
+  const n=document.createElement('div');n.textContent=name+':';t.append(n);
+  if(!rows.length){const e=document.createElement('div');e.textContent='  none yet';t.append(e)}
+  rows.slice().reverse().forEach(x=>{const e=document.createElement('div');const parts=Object.keys(x).filter(k=>k!=='time'&&k!=='kind').map(k=>k+' '+x[k]);
+   e.textContent='  '+x.time+' · '+x.kind+' · '+parts.join(', ');t.append(e)});
+ });
+}
+function renderChains(d){ const c=$('chains');c.replaceChildren();const ch=d.chains||{chains:[],medians:{},complete:0,started:0}; const h=document.createElement('b');h.textContent='Spoken questions, end to end ('+ch.complete+' complete of '+ch.started+' started; ms from mic release)';c.append(h); const m=document.createElement('div');m.textContent='Median: '+(Object.keys(ch.medians).length?Object.keys(ch.medians).map(k=>k+' '+ch.medians[k]).join(' · '):'none complete yet');c.append(m); ch.chains.forEach(x=>{const e=document.createElement('div');e.textContent='  '+x.id.slice(0,8)+' · transcript '+x.t_transcript+' · reply '+x.t_reply+' · tts ready '+x.t_tts_ready+' · audio '+x.t_audio;c.append(e)});}
+async function load(){const r=await api('/api/admin');if(!r.ok){say(r.d.error||'error',0);return}
+ $('soul').value=r.d.soul;$('context').value=r.d.context;const s=r.d.settings;
+ F.forEach(k=>{const v=s[k];$(k).value=Array.isArray(v)?v.join(','):String(v)});
+ $('spend').textContent='Spent this month: £'+r.d.spend.month_gbp+' · left: £'+r.d.spend.remaining_gbp;
+ renderVoice(r.d); renderChains(r.d); loadBlind(); loadSamples();
+ const m=$('mats');m.replaceChildren();if(!r.d.materials.length)m.textContent='No materials yet.';
+ r.d.materials.forEach(x=>{const d=document.createElement('div');d.textContent=x.name+' ('+x.bytes+' bytes) ';const b=document.createElement('button');b.textContent='delete';b.style.cssText='margin:0 0 0 8px;padding:2px 8px;background:var(--bad)';
+  b.onclick=async()=>{const q=await api('/api/admin/materials/delete',{name:x.name});say(q.ok?'Deleted':q.d.error,q.ok);load()};d.append(b);m.append(d)});say('Loaded',1)}
+// ---- record speech test samples (sttbench). Mic and recording follow the lesson page; the audio never leaves this PC.
+const REC={samples:[],i:0,stream:null,mr:null,chunks:[],blob:null,url:null,hold:false,t0:0,loaded:false};
+const REC_MAX_S=60;
+async function recMic(){
+  if(REC.stream&&REC.stream.getAudioTracks().some(t=>t.readyState==='live'))return REC.stream;
+  REC.stream=await navigator.mediaDevices.getUserMedia({audio:true});return REC.stream;
+}
+function recDiscard(){
+  if(REC.url)URL.revokeObjectURL(REC.url);
+  REC.url=null;REC.blob=null;$('recReview').hidden=true;$('recPlay').removeAttribute('src');
+}
+function recShow(){
+  const s=REC.samples[REC.i];
+  $('recText').textContent=s?s.text:'No sentences found. Add a .txt file for each sentence in data/stt-samples.';
+  $('rec').textContent=s?(s.name+' · '+(REC.i+1)+' of '+REC.samples.length+(s.recorded?' · recorded':' · not recorded yet')):'';
+  const list=$('recList');list.replaceChildren();
+  REC.samples.forEach((x,k)=>{
+    const b=document.createElement('button');
+    b.textContent=(x.recorded?'✓ ':'')+x.name;
+    b.style.cssText='margin:2px;padding:2px 8px;background:var(--mut);'+(k===REC.i?'outline:2px solid;':'');
+    b.onclick=()=>{recDiscard();REC.i=k;recShow()};
+    list.append(b);
+  });
+}
+async function loadSamples(){
+  const r=await api('/api/admin/stt-samples');
+  REC.samples=r.ok?r.d.samples:[];
+  if(!REC.loaded){REC.i=Math.max(0,REC.samples.findIndex(x=>!x.recorded));REC.loaded=true}
+  if(REC.i>=REC.samples.length)REC.i=0;
+  recShow();
+}
+function recEncodeWav(f,rate){
+  const b=new DataView(new ArrayBuffer(44+f.length*2));
+  const put=(o,s)=>{for(let i=0;i<s.length;i++)b.setUint8(o+i,s.charCodeAt(i))};
+  put(0,'RIFF');b.setUint32(4,36+f.length*2,true);put(8,'WAVE');put(12,'fmt ');
+  b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);b.setUint32(24,rate,true);
+  b.setUint32(28,rate*2,true);b.setUint16(32,2,true);b.setUint16(34,16,true);put(36,'data');b.setUint32(40,f.length*2,true);
+  for(let i=0;i<f.length;i++){const s=Math.max(-1,Math.min(1,f[i]));b.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true)}
+  return new Blob([b.buffer],{type:'audio/wav'});
+}
+async function recToWav(blob){
+  // Browser decode, then resample and mix to mono 16 kHz with an offline context. No libraries.
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  let buf;try{buf=await ctx.decodeAudioData(await blob.arrayBuffer())}finally{ctx.close()}
+  if(buf.duration>REC_MAX_S)throw new Error('longer than one minute');
+  const off=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000);
+  const src=off.createBufferSource();src.buffer=buf;src.connect(off.destination);src.start(0);
+  return recEncodeWav((await off.startRendering()).getChannelData(0),16000);
+}
+const recHold=$('recHold');
+recHold.onpointerdown=async e=>{
+  e.preventDefault();
+  if(REC.hold||REC.mr||!REC.samples[REC.i])return;
+  if(!navigator.mediaDevices||!window.MediaRecorder){$('recState').textContent='This browser cannot record audio.';return}
+  REC.hold=true;recDiscard();
+  try{await recMic()}catch(err){REC.hold=false;$('recState').textContent='Microphone not available: '+err.message;return}
+  if(!REC.hold)return;   // let go while the microphone was opening
+  REC.chunks=[];const r=new MediaRecorder(REC.stream);REC.mr=r;REC.t0=performance.now();
+  r.ondataavailable=ev=>{if(ev.data&&ev.data.size)REC.chunks.push(ev.data)};
+  r.onstop=()=>{
+    const secs=(performance.now()-REC.t0)/1000;REC.mr=null;
+    REC.blob=new Blob(REC.chunks,{type:r.mimeType||'audio/webm'});REC.url=URL.createObjectURL(REC.blob);
+    $('recPlay').src=REC.url;$('recReview').hidden=false;
+    $('recState').textContent=secs.toFixed(1)+' s. Listen, then Keep, Re-record or Skip.';
+  };
+  r.start();$('recState').textContent='Recording… let go to stop';
+};
+const recRelease=()=>{REC.hold=false;if(REC.mr&&REC.mr.state==='recording')REC.mr.stop()};
+recHold.onpointerup=recRelease;recHold.onpointerleave=recRelease;recHold.onpointercancel=recRelease;
+$('recAgain').onclick=()=>{recDiscard();$('recState').textContent=''};
+$('recSkip').onclick=()=>{recDiscard();if(REC.i<REC.samples.length-1)REC.i++;recShow();$('recState').textContent=''};
+$('recKeep').onclick=async()=>{
+  const s=REC.samples[REC.i];if(!s||!REC.blob)return;
+  $('recState').textContent='Saving…';
+  let wav;try{wav=await recToWav(REC.blob)}catch(err){$('recState').textContent='Could not convert the recording: '+err.message;return}
+  const r=await fetch('/api/admin/stt-sample/'+encodeURIComponent(s.name),{method:'POST',headers:{...hdr(),'Content-Type':'audio/wav'},body:wav});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){$('recState').textContent='Not saved: '+(d.error||r.status);return}
+  recDiscard();await loadSamples();
+  if(REC.i<REC.samples.length-1)REC.i++;
+  recShow();$('recState').textContent='Saved '+s.name+'.wav';
+};
+$('benchRun').onclick=async()=>{
+  const r=await api('/api/admin/sttbench/run',{});
+  if(!r.ok){$('benchSt').textContent=r.d.error||'could not start';return}
+  benchPoll();
+};
+async function benchPoll(){
+  const d=(await api('/api/admin/sttbench')).d;
+  $('benchProg').textContent=(d.progress||[]).slice(-3).join(' · ');
+  if(d.running){$('benchSt').textContent='Running sttbench (about 10 to 20 minutes)…';setTimeout(benchPoll,5000);return}
+  $('benchSt').textContent=d.error?('sttbench failed: '+d.error):'Finished';
+  if(d.result)renderStt(d.result);
+}
+document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{const k=b.dataset.save;const r=await api('/api/admin/'+k,{text:$(k).value});say(r.ok?'Saved '+k:r.d.error,r.ok)});
+$('savesettings').onclick=async()=>{const ch={};
+ const ints=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
+ ch.lesson_time=$('lesson_time').value;ch.max_messages_per_day=parseInt($('max_messages_per_day').value,10);ch.tone=$('tone').value;
+ ch.checkin_time=$('checkin_time').value.trim();ch.weekly_report=$('weekly_report').value==='true';ch.quiet_start=$('quiet_start').value;ch.quiet_end=$('quiet_end').value;ch.late_nudges_min=ints($('late_nudges_min').value).map(Number);
+ ch.rest_days=ints($('rest_days').value);ch.chat_model=$('chat_model').value;ch.paused=$('paused').value==='true';ch.lesson_generator=$('lesson_generator').value==='true';ch.timezone=$('timezone').value;ch.monthly_cap_gbp=Number($('monthly_cap_gbp').value);
+ ch.exam_date=$('exam_date').value;ch.pause_start=$('pause_start').value;ch.pause_end=$('pause_end').value;
+ ch.whisper_model=$('whisper_model').value;ch.lesson_voice=$('lesson_voice').value;ch.tts_fallback=$('tts_fallback').value;ch.gemini_billing=$('gemini_billing').value;
+ const r=await api('/api/admin/settings',{changes:ch});say(r.ok?'Settings saved':r.d.error,r.ok);if(r.ok)load()};
+$('savevoice').onclick=()=>$('savesettings').click();
+$('writeScripts').onclick=async()=>{const d=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);$('scr_out').textContent='Writing scripts (about a minute)…';const r=await api('/api/admin/write-scripts',{date:d});$('scr_out').textContent=r.ok?r.d.detail:(r.d.error||r.d.detail||'failed')};
+$('pronTest').onclick=async()=>{const r=await api('/api/admin/pronounce',{text:$('pron_in').value});$('pron_out').textContent=r.ok?'Spoken as: '+r.d.spoken:(r.d.error||'error')};
+$('reltimings').onclick=load;
+$('addmat').onclick=async()=>{const r=await api('/api/admin/materials',{name:$('mname').value,content:$('mcontent').value});say(r.ok?'Saved '+r.d.saved:r.d.error,r.ok);if(r.ok){$('mname').value=$('mcontent').value='';load()}};
+function asDataURL(f){return new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=bad;r.readAsDataURL(f)})}
+$('addphotos').onclick=async()=>{const fs=[...$('pfiles').files];const name=$('pname').value||'book.md';if(!fs.length)return say('Pick at least one photo',0);
+ for(let i=0;i<fs.length;i++){say('Transcribing page '+(i+1)+' of '+fs.length+'…',1);
+  const r=await api('/api/admin/materials/photo',{name,image:await asDataURL(fs[i])});if(!r.ok)return say('Page '+(i+1)+': '+r.d.error,0)}
+ say('Saved '+fs.length+' page(s) to '+name,1);$('pfiles').value='';load()};
+function showEvents(ev){const e=$('events');e.replaceChildren();if(!ev||!ev.length)return;const t=document.createElement('b');t.textContent='Recent activity';e.append(t);
+ ev.forEach(x=>{const d=document.createElement('div');d.className=x.kind.includes('failed')?'bad':'';d.textContent=x.ts.replace('T',' ')+' · '+x.detail;e.append(d)})}
+function showChecks(d){showEvents(d.events);const c=$('checks');c.replaceChildren();d.checks.forEach(x=>{const e=document.createElement('div');e.className=x.ok?'ok':'bad';e.textContent=(x.ok?'✔ ':'✘ ')+x.name+': '+x.detail;c.append(e)});
+ const s=d.setup,i=$('setupinfo');i.replaceChildren();const add=t=>{const e=document.createElement('div');e.textContent=t;i.append(e)};
+ if(s.tailscale_url)add('Phone link: '+s.tailscale_url);if(s.whatsapp_to)add('WhatsApp: '+s.whatsapp_to);add('Re-pair WhatsApp: '+s.commands.repair_whatsapp);add('Logs: '+s.commands.logs)}
+$('runchecks').onclick=async()=>{say('Running checks…',1);const r=await api('/api/admin/selftest');if(r.ok){showChecks(r.d);say('Checks done',1)}else say(r.d.error,0)};
+$('sendtest').onclick=async()=>{say('Sending…',1);const r=await api('/api/admin/selftest/send',{});if(r.ok){showChecks(r.d);say('Done',1)}else say(r.d.error,0)};
+$('writenow').onclick=async()=>{say('Writing today\'s lesson (can take a minute)…',1);const r=await api('/api/admin/write-lesson',{});
+ say(r.d.ok?'Lesson written. Open the lesson page.':'Failed: '+r.d.detail,r.d.ok);$('runchecks').click()};
+$('resetsoul').onclick=load;$('load').onclick=()=>{remember();load()};$('tok').value=stored();load();
+async function loadBlind(){const r=await api('/api/admin/blindtest');const list=$('btList');list.replaceChildren();
+ if(!r.ok){say(r.d.error||'error',0);return}
+ if(!r.d.items.length)list.textContent='No clips yet. Press Build.';
+ r.d.items.forEach((it,i)=>{const row=document.createElement('div');row.style.margin='8px 0';const t=document.createElement('div');t.textContent=(i+1)+'. '+it.text;row.append(t);
+  const a=document.createElement('audio');a.controls=true;a.preload='none';row.append(a);
+  fetch('/api/admin/blindtest/audio/'+it.id,{headers:hdr()}).then(x=>x.blob()).then(b=>{a.src=URL.createObjectURL(b)});
+  for(let s=1;s<=5;s++){const b=document.createElement('button');b.textContent=String(s);b.style.margin='0 4px 0 0';
+   b.onclick=async()=>{const v=await api('/api/admin/blindtest/vote',{id:it.id,score:s});say(v.ok?'Scored':'Not saved',v.ok);loadBlind()};row.append(b)}
+  list.append(row)});
+ const res=$('btRes');res.textContent=r.d.results.done?('Results: '+Object.entries(r.d.results.by_voice).map(([k,v])=>k+' '+v).join(' · ')):('Rated '+r.d.results.rated+' of '+r.d.results.clips+'. Results show after every clip is rated.');}
+$('btBuild').onclick=async()=>{$('btMsg').textContent='Building (about 30 s)…';const r=await api('/api/admin/blindtest/build',{});$('btMsg').textContent=r.ok?('Built '+r.d.clips+' clips'):(r.d.error||'failed');loadBlind()};
+</script></main></body></html>

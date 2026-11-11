@@ -1,0 +1,22 @@
+id: security-plus-sy0-701
+title: CompTIA Security+ SY0-701
+# Example schedule only. Setup and the admin page override these.
+exam_date: 2027-06-30
+lesson_minutes: 60
+lesson_time: "09:00"
+rest_days: [sat, sun]
+pause_ranges:            # tutor pauses; nightly writer skips these dates
+  - {start: 2027-04-05, end: 2027-04-09}
+lessons_from: 2027-01-04 # course lessons (lessons/NN-*.md) one a study day from here; then the nightly writer
+stages:                  # minutes, configurable in the admin panel
+  retrieval: 5
+  intro: 5
+  teaching: 15
+  guided_practice: 10
+  independent_practice: 15
+  qa: 5
+  review: 5
+question_types: [multiple_choice, pbq_scenario, acronym_recall, free_text]
+review_intervals_days: [1, 3, 7, 14, 30]
+objectives_file: objectives.yaml
+soul_file: soul.md

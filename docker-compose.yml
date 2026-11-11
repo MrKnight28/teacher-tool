@@ -1,0 +1,184 @@
+# Easiest: run setup.ps1 (Windows) or setup.sh (Linux/macOS). It runs the wizard, starts everything,
+# pairs WhatsApp and runs a self-test. Manual equivalent:
+#   docker compose --profile setup-browser run --rm -p 127.0.0.1:8090:8090 wizard   (open the address it prints: it has a one-time ?k= key)
+#   docker compose --profile whatsapp --profile tailscale up -d --build  (profiles you enabled)
+x-tutor: &tutor
+  build: ./apps/api
+  env_file:
+    - path: .env
+      required: false   # created by the setup wizard
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *tutor
+    environment:
+      TUTOR_DATA_DIR: /data
+      TUTOR_PACKS_DIR: /packs
+      TUTOR_VAULT_DIR: /vault-tutor
+      TUTOR_HOST: 0.0.0.0        # inside the container only; refuses to start without TUTOR_TOKEN
+    volumes:
+      - ./data:/data
+      - ./packs:/packs:ro
+      - ${OBSIDIAN_TUTOR_DIR:-./data/vault-tutor}:/vault-tutor   # only the vault's Tutor folder
+    ports:
+      - "127.0.0.1:${TUTOR_PORT:-8080}:8080"   # this PC only; phone access goes through Tailscale
+
+  scheduler:
+    <<: *tutor
+    command: ["python3", "-m", "tutor", "scheduler"]
+    environment:
+      TUTOR_DATA_DIR: /data
+      TUTOR_PACKS_DIR: /packs
+      TUTOR_BACKUP_DIR: /backups
+    volumes:
+      - ./data:/data
+      - ./packs:/packs:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+
+  # First-run setup in the terminal (setup.ps1 / setup.sh run it). Same container limits as the tutor, plus the repo
+  # (for .env and profiles) and the data folder (for models and the database). Only this service writes them.
+  setup:
+    build: ./apps/api
+    profiles: ["setup"]
+    command: ["python3", "-m", "tutor", "setup", "--repo", "/repo"]   # reads and writes /repo/.env itself
+    environment:
+      TUTOR_DATA_DIR: /data
+      TUTOR_PACKS_DIR: /packs
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - ./:/repo
+      - ./data:/data
+      - ./packs:/packs:ro
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  # Optional: the browser form for the integrations (WhatsApp, Tailscale, Obsidian folder, backup folder).
+  # Not needed for first-run setup. Start it with: docker compose --profile setup-browser run --rm -p 127.0.0.1:8090:8090 wizard
+  wizard:
+    build: ./apps/api
+    profiles: ["setup-browser"]
+    command: ["python3", "-m", "tutor", "wizard", "--repo", "/repo"]
+    volumes:
+      - ./:/repo
+    # setup.ps1/setup.sh publish this on a free localhost port with -p (8090 by default)
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  # ---- WhatsApp via OpenClaw (profile: whatsapp). Pinned image, messaging-only tools, no ClawHub skills.
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:2026.9.8}
+    profiles: ["whatsapp"]
+    env_file:
+      - path: openclaw/openclaw.env
+        required: false
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_PORT: "18789"
+    volumes:
+      - openclaw-home:/home/node/.openclaw   # config, state, workspace, installed plugins: a Linux volume, not a Windows folder (see openclaw-plugin-sync)
+      - openclaw-auth:/home/node/.config/openclaw   # WhatsApp login
+      - openclaw-plugins:/home/node/plugins:ro   # WhatsApp replies from the tutor (copied here by openclaw-plugin-sync)
+    command: ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+    dns: ["1.1.1.1", "8.8.8.8"]   # Docker Desktop's resolver drops lookups now and then (EAI_AGAIN); the one-off CLI shares this network
+    ports:
+      - "127.0.0.1:18789:18789"   # Control UI on this PC only
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    init: true
+    restart: unless-stopped
+
+  openclaw-cli:   # one-off commands only: plugin install, WhatsApp QR login, config validate
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:2026.9.8}
+    profiles: ["whatsapp-cli"]
+    network_mode: "service:openclaw-gateway"
+    # Same process namespace as the gateway too. OpenClaw keeps a lock on its database with the owner's pid and start time; a
+    # command from another container sees "pid 7" as someone else's, calls the gateway's lock stale and takes it, and the
+    # gateway then drops every message ("state ownership ... could not be verified"). Reproduced against 2026.9.8.
+    pid: "service:openclaw-gateway"
+    env_file:
+      - path: openclaw/openclaw.env
+        required: false
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_PORT: "18789"
+      BROWSER: echo
+    volumes:
+      - openclaw-home:/home/node/.openclaw   # config, state, workspace, installed plugins: a Linux volume, not a Windows folder (see openclaw-plugin-sync)
+      - openclaw-auth:/home/node/.config/openclaw   # WhatsApp login
+      - openclaw-plugins:/home/node/plugins:ro   # WhatsApp replies from the tutor (copied here by openclaw-plugin-sync)
+    entrypoint: ["node", "dist/index.js"]
+    stdin_open: true
+    tty: true
+    init: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  # One-off preparation of OpenClaw's Docker volumes (setup.ps1/setup.sh run it before starting the gateway; run it again after
+  # the plugin's code or openclaw/config/openclaw.json changes). Why volumes: Docker Desktop shows every Windows bind mount as
+  # root-owned and world-writable, and the OpenClaw container runs as uid 1000, so on a Windows folder it can't chmod its own files
+  # (EPERM fchmod), refuses plugins (world-writable folder), and can't lock its SQLite state. So:
+  #  - openclaw-home / openclaw-auth are owned by uid 1000; the config setup wrote (openclaw/config/openclaw.json) and SOUL.md are copied in;
+  #  - openclaw-plugin/ is copied into openclaw-plugins, root-owned and not group/world-writable.
+  openclaw-plugin-sync:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:2026.9.8}
+    profiles: ["whatsapp-cli"]
+    user: "0:0"
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        set -e;
+        rm -rf /dst/tutor-replies; cp -r /src/tutor-replies /dst/tutor-replies; chmod -R go-w,a+rX /dst; ls -l /dst/tutor-replies;
+        mkdir -p /oc/workspace /auth;
+        if [ -f /seed-config/openclaw.json ]; then cp -f /seed-config/openclaw.json /oc/openclaw.json; chown 1000:1000 /oc/openclaw.json; fi;
+        if [ -f /seed-workspace/SOUL.md ]; then cp -f /seed-workspace/SOUL.md /oc/workspace/SOUL.md; chown 1000:1000 /oc/workspace/SOUL.md; fi;
+        chown 1000:1000 /oc /oc/workspace /auth;
+        chmod 700 /oc /oc/workspace /auth; if [ -f /oc/openclaw.json ]; then chmod 600 /oc/openclaw.json; fi
+    volumes:
+      - ./openclaw-plugin:/src:ro
+      - ./openclaw/config:/seed-config:ro
+      - ./openclaw/workspace:/seed-workspace:ro
+      - openclaw-plugins:/dst
+      - openclaw-home:/oc
+      - openclaw-auth:/auth
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]   # only this one-off container: hand the volumes to uid 1000 and rewrite files it already handed over
+    security_opt: ["no-new-privileges:true"]
+
+  # ---- Private HTTPS for phone and mic (profile: tailscale). Userspace mode: no extra privileges needed.
+  tailscale:
+    image: tailscale/tailscale:stable
+    profiles: ["tailscale"]
+    hostname: ${TS_HOSTNAME:-teacher-tool}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_HOSTNAME: ${TS_HOSTNAME:-teacher-tool}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - ./tailscale/state:/var/lib/tailscale
+      - ./tailscale/serve.json:/config/serve.json:ro
+    restart: unless-stopped
+
+volumes:
+  openclaw-home:      # OpenClaw's config, SQLite state, workspace and installed plugins (see openclaw-plugin-sync)
+  openclaw-auth:      # OpenClaw's WhatsApp login
+  openclaw-plugins:   # the tutor-replies plugin, copied from openclaw-plugin/ (see openclaw-plugin-sync)

@@ -1,0 +1,7 @@
+{
+  "id": "tutor-replies",
+  "name": "Tutor replies",
+  "description": "Answers WhatsApp messages from the Security+ tutor's own data, without an agent turn.",
+  "activation": { "onStartup": true },
+  "configSchema": { "type": "object", "additionalProperties": false }
+}

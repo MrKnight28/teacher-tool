@@ -1,0 +1,209 @@
+<!-- objectives: 5.2 -->
+<!-- pack-lesson: 15 -->
+# Risk Management
+
+## Retrieval (5 min)
+
+### Retrieval
+Quick check on earlier material.
+
+```say
+? Before we start, what do you think the word risk means in a security setting?
+expect: The chance that something bad happens, combined with how much harm it would do.
+? Can you name any ways an organisation might deal with a danger other than fixing it?
+expect: Any of: avoiding it, insuring against it, or accepting it.
+```
+
+## Intro (5 min)
+
+### Why risk management matters
+- Risk management is a business decision, not just a technical one
+- Today: key terms, the loss formulas, the heat map, the four responses
+- The formulas are tested: expect at least one calculation
+Example: A board asks: is a £3k-a-year control worth buying? The numbers answer it.
+
+```say
+Every organisation has more threats than money to deal with them, so risk management is really about choosing where to spend.
+The exam loves this topic because it mixes plain definitions with a bit of arithmetic. The sums are easy once you know which number goes where, and by the end you will be able to do them in your head.
+? In your own words, why can an organisation not simply fix every security problem it finds?
+expect: Money, time and people are limited, so it has to prioritise by how likely and how damaging each problem is.
+```
+
+## Teaching (15 min)
+
+### What risk is: inherent and residual
+- Risk: the likelihood a threat exploits a weakness and causes harm
+- Often written as Threat x Vulnerability x Impact
+- Inherent risk: the level BEFORE any controls
+- Residual risk: what is LEFT AFTER controls, never zero
+Example: Unpatched web server facing the internet: high inherent. Patch it and add a WAF: lower residual, but a zero-day could still land.
+Common mix-up: If we put enough controls in place, we can get the leftover danger down to nothing. Residual risk is always above zero; the aim is to bring it down to a level the organisation is willing to live with.
+
+```say
+Three ingredients have to line up for there to be risk: someone or something that could cause harm, a weak spot it can use, and real damage if it succeeds. Take any one ingredient away and the risk shrinks.
+Inherent is the raw starting point, before you have done anything. Residual is what you are still carrying once your controls are in place.
+No control is perfect, so the leftover never reaches nothing. If an exam option claims controls brought it down to zero, that option is wrong.
+Here is a common mistake. If we put enough controls in place, we can get the leftover danger down to nothing. That is not right. Residual risk is always above zero; the aim is to bring it down to a level the organisation is willing to live with.
+? A company installs a firewall in front of a database. Is the level that remains after installing it inherent or residual?
+expect: Residual, because it is what is left after a control has been applied.
+```
+
+### The loss formulas: SLE and ALE
+- SLE = AV x EF: the cost of ONE incident
+- ALE = SLE x ARO: the expected cost PER YEAR
+- EF is the percentage of the asset lost; ARO is how often per year
+- Decision rule: if a control costs less per year than the ALE, buy it
+Example: £100k server, fire destroys 50%: SLE = £50k. Fire once a decade (ARO 0.1): ALE = £5k a year.
+Example: A fire suppression control costing £3k a year against a £5k ALE is worth it.
+Common mix-up: The annualised rate of occurrence has to be a whole number, like once or twice. It can be a fraction: once every ten years is 0.1, once every four years is 0.25.
+
+```say
+Start with one bad day. Take what the asset is worth, multiply by the share of it you would lose, and that is the single loss expectancy.
+Then spread it across time. Multiply that one-off loss by how many times a year you expect it to happen. Once every ten years is nought point one, so the yearly figure is a tenth of the single loss.
+The yearly figure is what you compare a control against. If protection costs less each year than the loss you expect each year, it pays for itself.
+Here is a common mistake. The annualised rate of occurrence has to be a whole number, like once or twice. That is not right. It can be a fraction: once every ten years is 0.1, once every four years is 0.25.
+? A laptop worth two thousand pounds would be a total loss if stolen, and you expect one theft every two years. What is the yearly expected loss?
+expect: One thousand pounds: single loss of two thousand multiplied by a rate of 0.5.
+? Which figure tells you the cost of one incident, and which tells you the cost per year?
+expect: Single loss expectancy is one incident; annual loss expectancy is per year.
+```
+
+### Qualitative versus quantitative, and the heat map
+- Quantitative: money values, objective, needs data, gives SLE and ALE
+- Qualitative: High, Medium, Low ratings, fast but subjective
+- Heat map: likelihood on one axis, impact on the other
+- High likelihood + high impact: treat urgently. Low + low: accept. Mixed: monitor
+Example: A start-up with no incident history rates phishing as High likelihood, Medium impact and plots it on a heat map: qualitative.
+Common mix-up: Qualitative assessment is useless because it does not produce numbers. It is fast and useful when there is no reliable data; it just relies on judgement, so it is more subjective.
+
+```say
+There are two ways to size up a risk. One puts pounds on it, which is precise but only as good as your data. The other uses ratings, which is quick but depends on someone's judgement.
+A heat map is what the ratings approach produces. Picture a grid: the top right corner, very likely and very damaging, is where you act first, and the bottom left can usually be accepted.
+Here is a common mistake. Qualitative assessment is useless because it does not produce numbers. That is not right. It is fast and useful when there is no reliable data; it just relies on judgement, so it is more subjective.
+? If an exam question mentions exposure factor and pounds, which kind of assessment is it describing?
+expect: Quantitative, because it uses money values and formulas.
+```
+
+### The four ways to respond
+- Avoid: don't do the thing at all, e.g. don't launch the feature
+- Transfer: move the money impact elsewhere, e.g. cyber insurance
+- Mitigate: reduce likelihood or impact with controls or patching. The most common
+- Accept: formally document and sign off. For low risks, or when the fix costs more than the loss
+Example: A firm buys cyber insurance. After a breach the insurer pays out, but customers' data is still exposed and the reputation damage is still the firm's.
+Common mix-up: Buying cyber insurance means the company no longer carries that risk. Insurance moves the money impact only; the event can still happen and the company still lives with the disruption.
+
+```say
+Think of the four options as walk away, hand the bill to someone else, shrink it, or knowingly live with it.
+Insurance is the trap here. It only moves the cost. The breach can still happen and you still suffer the disruption, so the risk itself has not gone anywhere.
+Accepting is a deliberate, written decision with someone senior signing it. Simply ignoring a problem is not acceptance.
+Here is a common mistake. Buying cyber insurance means the company no longer carries that risk. That is not right. Insurance moves the money impact only; the event can still happen and the company still lives with the disruption.
+? A team installs patches and adds multi-factor login to cut the chance of a break-in. Which of the four options is that?
+expect: Mitigate, because controls are reducing likelihood or impact.
+```
+
+### Risk vocabulary
+- Risk appetite: how much the organisation is WILLING to take on, set by the board
+- Risk tolerance: the acceptable variation around that appetite
+- Risk register: central record, every entry needs a NAMED OWNER
+- KRI (key risk indicator): a metric warning that a risk is rising
+- BIA (business impact analysis): which functions are critical and the impact if down. Drives RTO and RPO
+Example: A rising number of unpatched servers each month is a key risk indicator.
+Example: The business impact analysis finds payroll can be down for 24 hours at most, which sets its recovery time objective.
+
+```say
+Appetite is the overall stance the board sets. Tolerance is the wiggle room either side of it, how far you can drift before someone has to act.
+A register is only useful if every line has a named person accountable for it. An entry owned by everyone is owned by no one.
+A business impact analysis asks which processes the company cannot live without and what happens if they stop. Its answers feed the recovery time and recovery point objectives.
+? What must every entry in a risk register have, and why?
+expect: A named owner, so someone is accountable for tracking and treating it.
+? How is risk tolerance different from risk appetite?
+expect: Appetite is how much the organisation is willing to take on overall; tolerance is the acceptable variation around that level.
+```
+
+## Guided practice (10 min)
+
+### Putting the numbers to work
+- Work out the single loss first, then the yearly figure
+- Compare the yearly figure with the yearly cost of the control
+- Then pick one of the four responses
+Example: Asset £200k, EF 25%, ARO 0.5: SLE £50k, ALE £25k.
+
+```say
+Take this one slowly and say your working out loud. The sums are simple; the marks come from putting each number in the right place.
+Once you have the yearly figure, the decision almost makes itself.
+? If the exposure factor were 100 percent, what would the single loss equal?
+expect: The full asset value.
+```
+
+### Scenario: Putting the numbers to work
+A shop's customer database is valued at £80,000. A ransomware attack would make 50% of it unrecoverable. The shop expects such an attack once every four years. A backup service that would prevent most of the loss costs £6,000 a year.
+
+```say
+Look at the scenario on the screen.
+? Work out the single loss and the yearly expected loss, then tell me whether the backup service is worth buying and which of the four responses it represents.
+expect: Single loss is 40,000 pounds; rate is 0.25, so the yearly loss is 10,000 pounds. The service costs 6,000 a year, less than 10,000, so buy it. That is mitigation.
+```
+
+## Review (5 min)
+
+### Key distinctions and traps
+- SLE = AV x EF (one incident). ALE = SLE x ARO (per year)
+- Inherent = before controls. Residual = after, never zero
+- Transfer moves the money impact only; the risk itself remains
+- Accept must be documented and signed off; ignoring is not accepting
+- Appetite set by the board; tolerance is the variation around it
+Example: Control cheaper per year than the ALE: buy it.
+
+```say
+If you remember one thing, make it the order of the sums: one incident first, then multiply by how often per year.
+The classic traps are insurance making the risk vanish, accepting by doing nothing, and residual risk reaching zero. All three are wrong.
+? Which response would you choose for a low-rated issue where the fix would cost more than the loss, and what must happen for it to count?
+expect: Accept, and it must be formally documented and signed off.
+```
+
+```quiz
+[
+ {
+  "objective": "5.2",
+  "type": "multiple_choice",
+  "q": "Which risk response stops the risky activity entirely?",
+  "options": [
+   "Transfer",
+   "Mitigate",
+   "Accept",
+   "Avoid"
+  ],
+  "answer": "Avoid",
+  "why": "Avoidance removes the danger by not doing the thing that creates it at all, for example not launching a feature.",
+  "source": "exam"
+ },
+ {
+  "objective": "5.2",
+  "type": "multiple_choice",
+  "q": "Which response shifts some financial consequence to another party?",
+  "options": [
+   "Transfer",
+   "Avoid",
+   "Accept",
+   "Ignore"
+  ],
+  "answer": "Transfer",
+  "why": "Transfer, such as buying cyber insurance, moves the money impact to someone else, although the underlying danger still remains.",
+  "source": "exam"
+ },
+ {
+  "objective": "5.2",
+  "type": "multiple_choice",
+  "q": "What is the difference between risk and a vulnerability?",
+  "options": [
+   "They are identical",
+   "Risk combines likelihood and impact; a vulnerability is a weakness",
+   "Risk is always a control",
+   "A vulnerability is always an incident"
+  ],
+  "answer": "Risk combines likelihood and impact; a vulnerability is a weakness",
+  "why": "A vulnerability is just a weak spot; risk is the chance a threat uses that weak spot multiplied by how much harm would follow.",
+  "source": "exam"
+ }
+]
+```

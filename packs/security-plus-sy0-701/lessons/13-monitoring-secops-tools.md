@@ -1,0 +1,217 @@
+<!-- objectives: 4.4,4.5 -->
+<!-- pack-lesson: 13 -->
+# Monitoring and SecOps Tools
+
+## Retrieval (5 min)
+
+### Retrieval
+Quick check on earlier material.
+
+```say
+? Where would you look first if you wanted to know whether someone had been trying to guess passwords on your computer?
+expect: The login or authentication logs, for example the Windows security event log.
+? What do you think a firewall actually decides about each piece of traffic?
+expect: Whether to allow or block it, based on rules about things like source, destination and port.
+```
+
+## Intro (5 min)
+
+### Seeing and stopping attacks
+- 4.4: alerting and monitoring tools
+- 4.5: changing enterprise defences to fit a scenario
+- Exam style: pick the RIGHT tool for the problem described
+Example: Insider copying files, malware calling home, a spoofed invoice email: each one has a different best tool
+
+```say
+Today is a toolbox lesson. A security team has dozens of products with similar-sounding names, and the exam loves to describe a problem and ask which tool fits best.
+For each tool, hold on to two things: what it can see, and whether it only warns you or actually stops the attack.
+? What is the difference between a tool that detects an attack and one that prevents it?
+expect: A detective tool notices and alerts after or while something happens; a preventive tool blocks it from happening.
+```
+
+## Teaching (15 min)
+
+### SIEM and SOAR
+- SIEM: collects, normalises, CORRELATES and alerts on logs from everywhere. Detective, the brain of monitoring
+- Feeds: DNS, authentication, cloud, firewall, IDS and IPS, endpoint and EDR logs
+- Correlated alerts go to an analyst or to SOAR
+- SOAR: automates the reply using predefined PLAYBOOKS, connects tools together
+Example: 1 failed login means nothing. 500 failed logins across 200 accounts in 60 seconds is password spraying
+Common mix-up: A SIEM blocks attacks as soon as it sees them. A SIEM is detective: it spots and alerts. Automatic blocking comes from SOAR playbooks or from inline tools such as an intrusion prevention system.
+
+```say
+Security information and event management sits in the middle like a hub. On its own, each log line is boring; the value comes from joining lines from different systems so a pattern appears.
+Normalising means putting every source into the same format, so a firewall entry and a Windows login entry can be compared side by side.
+Once a pattern is spotted, Security Orchestration, Automation and Response takes over the repetitive part. A playbook might disable the account, block the source address and open a ticket, all in seconds and without waiting for a human.
+Here is a common mistake. A SIEM blocks attacks as soon as it sees them. That is not right. A SIEM is detective: it spots and alerts. Automatic blocking comes from SOAR playbooks or from inline tools such as an intrusion prevention system.
+? Why would a single failed login never trigger an alert, but hundreds across many accounts would?
+expect: One failure is normal user error; hundreds across many accounts in a short time is a pattern that suggests password spraying, which only appears when logs are combined.
+? What is a playbook in this context?
+expect: A predefined set of automated steps that runs when a certain alert fires, such as isolating a host or disabling an account.
+```
+
+### Detection and response tools
+- IDS: detects and ALERTS only, passive, OUT OF BAND. IPS: detects and BLOCKS, active, INLINE
+- EDR: ENDPOINTS only, behaviour monitoring, threat hunting, isolation. XDR: EVERYTHING, endpoints, network, cloud and email in one console
+- UBA: baselines user behaviour, flags deviations. Best for INSIDER THREATS
+- FIM: HASHES critical files, any change alters the hash and raises an alert
+- NAC: posture check BEFORE joining the network, fail means remediation VLAN. DLP: stops sensitive data LEAVING
+Example: A laptop missing patches plugs in and is dropped into a remediation VLAN until it updates
+Example: An accountant suddenly downloads the whole customer database at 3am: UBA flags it
+Common mix-up: Data loss prevention will stop hackers breaking into the network. Data loss prevention watches data leaving, such as emails, uploads and USB copies; keeping attackers out is the job of firewalls and prevention systems.
+
+```say
+An intrusion detection system watches a copy of the traffic from the side, so it can only shout. An intrusion prevention system sits in the path, so every packet goes through it and it can drop the bad ones.
+Endpoint detection and response lives on laptops and servers. Extended detection and response pulls endpoints, network, cloud and email into one view, so it sees more of the attack chain.
+User behaviour analytics learns what normal looks like for each person, which is why it catches insiders who already have valid logins. File integrity monitoring takes a fingerprint of key system files and shouts the moment one changes.
+Network access control checks a device's health at the door. Data loss prevention points the other way: it is about sensitive data getting out, not attackers getting in.
+An intrusion detection system is a smoke alarm: it makes noise but puts nothing out. An intrusion prevention system is the sprinkler: it acts. The comparison breaks down because a sprinkler soaks everything, whereas a prevention system drops only the traffic its rules match, and a bad rule can block legitimate traffic.
+Here is a common mistake. Data loss prevention will stop hackers breaking into the network. That is not right. Data loss prevention watches data leaving, such as emails, uploads and USB copies; keeping attackers out is the job of firewalls and prevention systems.
+? Which tool would you choose to spot a trusted employee slowly stealing data, and why?
+expect: User behaviour analytics, because it compares activity against that person's normal baseline and flags deviations even with valid credentials.
+? Why can an intrusion prevention system block traffic when an intrusion detection system cannot?
+expect: The prevention system is inline, so all traffic passes through it; the detection system is out of band and only sees a copy.
+```
+
+### Traffic records and email authentication
+- NetFlow: METADATA only, who talked to who, when, how much. Light on storage
+- PCAP: full CONTENT, everything said. Heavy, used during investigations
+- SPF: DNS list of servers allowed to send for a domain
+- DKIM: cryptographic signature on each email
+- DMARC: policy for when checks fail, plus reports. The three work TOGETHER
+Example: NetFlow shows a server sent 4 GB to an unknown address overnight; a packet capture would show exactly what was in it
+Common mix-up: SPF on its own is enough to stop spoofed email. SPF only lists allowed sending servers; you need DKIM to prove the message is intact and DMARC to tell receivers what to do when checks fail.
+
+```say
+Flow records are cheap to keep for months, so they are great for spotting unusual volumes or destinations. Full packet captures eat storage fast, so you switch them on when you are actually investigating something.
+The email trio answers three questions. Is this server allowed to send for the domain? Has the message been tampered with since it was signed? And if either check fails, should the receiver quarantine it, reject it, or just report it?
+NetFlow is the phone bill: numbers dialled and how long each call lasted. A packet capture is a recording of the calls themselves. Where it breaks down: encrypted traffic in a capture is like a recording in a language you cannot understand, so you still see who spoke but not what was said.
+Here is a common mistake. SPF on its own is enough to stop spoofed email. That is not right. SPF only lists allowed sending servers; you need DKIM to prove the message is intact and DMARC to tell receivers what to do when checks fail.
+? An investigator needs to know the exact file a compromised host uploaded. Flow data or packet capture?
+expect: Packet capture, because flow data only records metadata such as addresses, times and volumes, not the content.
+? Which of the email trio tells a receiving server to reject messages that fail the checks?
+expect: DMARC, which sets the policy and sends reports.
+```
+
+### Firewalls and filtering
+- NGFW: sees APPLICATIONS regardless of port, not fooled by malware on 443. WAF: protects WEB APPS, blocks SQLi and XSS at the HTTP layer
+- Stateful: remembers each session, so a reply must belong to a conversation already under way
+- Rule order: TOP to BOTTOM, first match wins. Specific rules first!
+- Screened subnet = DMZ: public servers between two firewalls
+- DNS filtering blocks bad domains BEFORE connecting. Web filter agent works OFF the corporate network; proxy filters only ON it
+Example: A broad allow rule above a specific block rule means the block never fires, because the first match wins
+Common mix-up: The order of firewall rules does not matter because the firewall checks them all. Processing stops at the first match, so a general allow placed above a specific deny will let the unwanted traffic through.
+
+```say
+A next-generation firewall identifies the actual application, so malware hiding on the normal web port is still recognised. A web application firewall is narrower: it sits in front of a website and understands web requests well enough to spot injection and cross-site scripting.
+A stateful device keeps a table of sessions it has seen, so an inbound packet claiming to be a reply is checked against a real outbound request. An older stateless filter judges each packet in isolation.
+Rules are read from the top down and the first one that matches is used, so put specific rules above general ones. Most rule sets also end with an implicit deny for anything left unmatched.
+Domain name filtering is preventive: it refuses the lookup, so malware cannot even reach its command and control server. For laptops that leave the office, choose an agent-based web filter, because a central proxy only sees traffic on the company network.
+Here is a common mistake. The order of firewall rules does not matter because the firewall checks them all. That is not right. Processing stops at the first match, so a general allow placed above a specific deny will let the unwanted traffic through.
+? Staff work from home with company laptops and visit dangerous websites. Proxy-based or agent-based web filtering?
+expect: Agent-based, because the agent on the laptop filters wherever it is, while a proxy only covers traffic on the corporate network.
+? Where would you put a public web server so that a breach of it does not hand the attacker the internal network?
+expect: In a screened subnet, the DMZ, between two firewalls.
+```
+
+### SNMP and alerting
+- SNMPv3: the ONLY secure version. v1 and v2 send community strings in plain text
+- Alert fatigue: too many alerts, analysts tune out, real threats missed
+- False negative: a real attack MISSED. More dangerous than a false positive
+Example: A SIEM rule fires 2,000 times a day on harmless backups; the team mutes it and misses the one real alert hidden inside
+Common mix-up: More alerts always means better security. Too many alerts cause alert fatigue, so analysts start ignoring them and genuine attacks slip through.
+
+```say
+Simple Network Management Protocol lets you monitor routers, switches and printers. Versions one and two use a community string as a password, and it travels unencrypted, so anyone sniffing can read it. Version three adds proper authentication and encryption.
+Tuning matters as much as the tool. A false positive wastes an analyst's time, but a false negative is silent: nobody looks, and the attacker carries on unnoticed.
+Here is a common mistake. More alerts always means better security. That is not right. Too many alerts cause alert fatigue, so analysts start ignoring them and genuine attacks slip through.
+? Why is a false negative considered worse than a false positive?
+expect: A false negative means a real attack went undetected, so nobody responds; a false positive only wastes time.
+```
+
+## Guided practice (10 min)
+
+### Choosing the right tool
+- Match each problem to a tool
+- Say whether the tool detects or prevents
+Example: Spoofed invoice email: SPF, DKIM and DMARC
+
+```say
+Here is a busy week for a small security team. Take each problem in turn, name the best tool, and tell me whether it warns or blocks.
+Listen for the clue words: someone trusted acting oddly, data leaving, files changing, devices joining, laptops outside the office.
+? Which tool would warn you that a critical system file on a web server has been quietly replaced?
+expect: File integrity monitoring, which compares file hashes and alerts on any change.
+```
+
+### Scenario: Choosing the right tool
+Monday: an unpatched contractor laptop plugs into the office network. Tuesday: emails pretending to be the finance director reach staff. Wednesday: a sales manager uploads the client list to personal cloud storage. Thursday: a malware sample tries to look up its control domain. Friday: the security team is ignoring hundreds of noisy alerts a day.
+
+```say
+Look at the scenario on the screen.
+? Pick the best control for each day and tell me whether it detects or prevents.
+expect: Monday network access control with a remediation VLAN, preventive; Tuesday SPF, DKIM and DMARC; Wednesday data loss prevention, possibly user behaviour analytics to detect it; Thursday DNS filtering, preventive; Friday tune the SIEM rules to cut alert fatigue and avoid false negatives.
+```
+
+## Review (5 min)
+
+### Key distinctions and traps
+- SIEM spots, SOAR acts
+- IDS smoke alarm, IPS sprinkler
+- EDR endpoints only, XDR everything
+- NetFlow phone bill, PCAP call recording
+- DLP stops data going OUT, not attackers coming IN
+Example: SNMPv3 only; false negatives are the dangerous ones; firewall rules first match wins
+
+```say
+Most questions here come down to scope and action. Scope: one endpoint, everything, users, files, or traffic. Action: does it only warn, or does it block?
+Traps to watch: a monitoring hub never blocks by itself, plain web filtering through a proxy fails once a laptop leaves the building, and only the third version of the network management protocol is safe.
+? Which detection tool would you pick to cover laptops, cloud and email from one console?
+expect: Extended detection and response, XDR.
+```
+
+```quiz
+[
+ {
+  "objective": "4.4",
+  "type": "multiple_choice",
+  "q": "What is the primary role of a SIEM in a security operations centre?",
+  "options": [
+   "Centralise and correlate security events",
+   "Physically destroy drives",
+   "Replace all firewalls",
+   "Create user passwords"
+  ],
+  "answer": "Centralise and correlate security events",
+  "why": "A SIEM gathers logs from across the organisation, normalises them and links related entries so attacks spread over many systems become visible.",
+  "source": "exam"
+ },
+ {
+  "objective": "4.4",
+  "type": "multiple_choice",
+  "q": "What does SOAR add to a security operations workflow?",
+  "options": [
+   "Physical access",
+   "Orchestration and automated response",
+   "Data sovereignty",
+   "Certificate issuance"
+  ],
+  "answer": "Orchestration and automated response",
+  "why": "SOAR connects security tools and runs predefined playbooks, so common alerts are handled automatically without waiting for an analyst.",
+  "source": "exam"
+ },
+ {
+  "objective": "4.5",
+  "type": "multiple_choice",
+  "q": "What is a stateful firewall able to consider beyond a simple packet filter?",
+  "options": [
+   "Only cable length",
+   "Only user training",
+   "Connection state",
+   "Only physical location"
+  ],
+  "answer": "Connection state",
+  "why": "A stateful firewall tracks sessions in a state table, so it can tell whether a packet belongs to an established conversation; a simple packet filter judges each packet on its own.",
+  "source": "exam"
+ }
+]
+```

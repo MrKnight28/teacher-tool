@@ -1,0 +1,2231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security+ Classroom</title>
+<style>
+/* TutorRoom classroom. One stage in the middle, a slim bar above, a voice dock below. Notes slide in as a drawer and
+   never cover the lesson. Look: ultramarine ink, highlighter yellow, index cards; exam questions switch to a square
+   answer sheet with round bubbles. No web fonts or network: this page runs offline. */
+:root{
+  --bg:#F2F3F8; --panel:#FFFFFF; --panel2:#E9ECF9; --line:#C4C9E2; --text:#131A3B; --muted:#434B75;
+  --accent:#2438D1; --accent-ink:#FFFFFF; --hi:#FFD94A; --hi-ink:#131A3B;
+  --danger:#A4172E; --danger-bg:#FBE1E5; --ok:#0B6B3A; --ok-bg:#DDF3E5;
+  --info:#2438D1; --purple:#6A2FB8; --warn:#8A5A00;
+  --field:#DCE1F8; --shadow:#C4C9E2; --focus:#2438D1;
+  --sheet:#FFFFFF; --sheet-ink:#131A3B; --sheet-line:#C4C9E2; --paper:#FBF7EC; --ink:#2B2A27; --rule:#D9D2BD;
+  --nb-w:380px;
+  --f-display:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,Verdana,sans-serif;
+  --f-mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1230; --panel:#161D47; --panel2:#1F2860; --line:#333C75; --text:#EAEDFF; --muted:#B0B8E8;
+    --accent:#9AA9FF; --accent-ink:#0D1230;
+    --danger:#FF93A6; --danger-bg:#521827; --ok:#7BE3A9; --ok-bg:#11402D;
+    --info:#9AA9FF; --purple:#CDA8FF; --warn:#FFD94A;
+    --field:#070A22; --shadow:#05081C; --focus:#FFD94A;
+    --sheet:#161D47; --sheet-ink:#EAEDFF; --sheet-line:#333C75;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1230; --panel:#161D47; --panel2:#1F2860; --line:#333C75; --text:#EAEDFF; --muted:#B0B8E8;
+  --accent:#9AA9FF; --accent-ink:#0D1230;
+  --danger:#FF93A6; --danger-bg:#521827; --ok:#7BE3A9; --ok-bg:#11402D;
+  --info:#9AA9FF; --purple:#CDA8FF; --warn:#FFD94A;
+  --field:#070A22; --shadow:#05081C; --focus:#FFD94A;
+  --sheet:#161D47; --sheet-ink:#EAEDFF; --sheet-line:#333C75;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:18px/1.5 var(--f-body);display:flex;flex-direction:column;overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+a{color:var(--accent)}
+[hidden]{display:none!important}
+
+/* accessibility: a visible focus ring everywhere, no motion for people who ask for none */
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* top bar */
+.topbar{flex:none;display:flex;align-items:center;gap:10px 14px;padding:8px 16px;border-bottom:1.5px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.brand{font:800 22px/1 var(--f-display);letter-spacing:-.01em}
+.brand span{color:var(--accent)}
+.lesson-title{color:var(--muted);flex:1;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
+.chip{background:var(--panel2);border:1.5px solid var(--line);border-radius:999px;padding:3px 12px;font-size:14px;color:var(--muted);font-family:var(--f-mono)}
+.chip b{color:var(--text)}
+.tbtn{min-height:42px;padding:0 14px;border:2px solid var(--line);background:transparent;border-radius:10px;font-weight:700;font-size:16px;color:var(--text)}
+.tbtn[aria-expanded="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.settings{position:relative}
+.settings summary{list-style:none;min-height:42px;display:inline-flex;align-items:center;padding:0 14px;border:2px solid var(--line);border-radius:10px;font-weight:700;font-size:16px;cursor:pointer}
+.settings summary::-webkit-details-marker{display:none}
+.settings[open] summary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.settings .pop{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:min(92vw,340px);background:var(--panel);border:2px solid var(--text);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:5px 5px 0 var(--shadow)}
+.settings .pop input{background:var(--field);border:2px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);font-size:16px}
+.settings .pop .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.settings .pop button{background:var(--panel2);border:2px solid var(--line);border-radius:8px;padding:5px 12px;font-size:15px;min-height:38px}
+#msg{color:var(--danger);font-size:15px;margin:0 16px}
+
+/* layout: the stage fills the page; notes are a drawer that takes its own column (or row on a phone) */
+.layout{flex:1;display:grid;grid-template-columns:minmax(0,1fr);min-height:0;padding:12px 16px 14px;gap:0;max-width:1400px;width:100%;margin-inline:auto}
+body.nb-open .layout{grid-template-columns:minmax(0,1fr) 10px var(--nb-w)}
+.splitter,.notebook{display:none}
+body.nb-open .splitter,body.nb-open .notebook{display:flex}
+.classroom{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
+
+/* sections strip */
+.stepper{display:flex;gap:6px;flex-wrap:wrap}
+.step{background:transparent;border:1.5px solid var(--line);border-radius:8px;padding:3px 12px;font:14px var(--f-mono);color:var(--muted);text-align:left;position:relative;min-width:0;white-space:nowrap}
+.step b{font-weight:700;margin-right:8px}
+.step.done{border-color:var(--muted)}
+.step.done b::before{content:"✓ "}
+.step.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.step.active b{color:var(--bg)}
+
+/* the stage */
+.screen{flex:1;min-height:0;background:var(--panel);border:2px solid var(--text);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:5px 5px 0 var(--shadow);position:relative}
+.intro{position:absolute;inset:0;z-index:5;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.intro .kicker{font:700 13px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.intro h2{margin:0;font:800 clamp(30px,5vw,48px)/1.05 var(--f-display);letter-spacing:-.015em;text-wrap:balance}
+.intro p{margin:0;color:var(--muted);max-width:560px}
+.intro .btn{font:700 24px var(--f-display);padding:16px 40px;min-height:64px}
+
+.screen-head{display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1.5px solid var(--line)}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--hi);border:2px solid var(--text);flex:none}
+.avatar.speaking{animation:ring 1.3s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 var(--accent)}100%{box-shadow:0 0 0 12px transparent}}
+.who{display:none}
+.state{font:13px var(--f-mono);padding:2px 10px;border-radius:999px;background:var(--panel2);border:1.5px solid var(--line);color:var(--muted)}
+.state.speaking,.state.waiting{color:var(--accent);border-color:var(--accent)}
+.state.thinking,.state.transcribing{color:var(--warn);border-color:var(--warn)}
+.state.recording{color:var(--danger);border-color:var(--danger)}
+.timer{font:600 20px var(--f-mono);font-variant-numeric:tabular-nums;min-width:72px;text-align:right}
+.timer.over{color:var(--warn)}
+
+/* teacher status: a word, a shape and a colour, never colour alone */
+.tstatus{margin-left:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:10px;font:700 15px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 16px 5px 12px;border-radius:999px;background:var(--panel);border:2px solid var(--text);color:var(--text);min-width:9.5em}
+.tstatus i{width:12px;height:12px;background:var(--muted);border-radius:50%;flex:none}
+.tstatus[data-s="teaching"] i,.tstatus[data-s="explaining"] i{background:var(--accent)}
+.tstatus[data-s="asking"] i{background:var(--hi);border-radius:2px;outline:2px solid var(--text);outline-offset:-1px}
+.tstatus[data-s="listening"] i{background:var(--danger);animation:blink 1.2s ease-in-out infinite}
+.tstatus[data-s="thinking"] i{background:var(--text);border-radius:2px;transform:rotate(45deg)}
+.tstatus[data-s="exam-question"] i{background:var(--hi);border-radius:0;outline:2px solid var(--text);outline-offset:-1px}
+.tstatus[data-s="reviewing"] i{background:var(--ok);border-radius:0}
+.tstatus[data-s="lesson-complete"] i{background:var(--ok)}
+@keyframes blink{50%{opacity:.25}}
+
+/* lesson header: course, lesson, title, section, objective, progress */
+.lesson-head{display:flex;gap:8px 28px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;padding:10px 20px 10px;border-bottom:1.5px solid var(--line)}
+.lh-main{min-width:0;flex:1 1 320px}
+.lh-kicker{color:var(--muted);font:13px var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.lh-practice{margin-left:8px;background:var(--hi);color:var(--hi-ink);border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700}
+.lh-title{margin:0;font:800 clamp(22px,2.6vw,30px)/1.1 var(--f-display);letter-spacing:-.015em;overflow-wrap:anywhere;text-wrap:balance}
+.lh-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.lh-chip{font-size:14px;color:var(--muted);background:var(--panel2);border:1.5px solid var(--line);border-radius:6px;padding:1px 10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lh-progress{flex:0 1 320px;min-width:230px}
+.lh-plabel{display:flex;justify-content:space-between;gap:8px;font:700 13px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.lh-plabel b{font-variant-numeric:tabular-nums}
+/* ten blocks, filled to the percentage */
+.meter{height:16px;border-radius:3px;overflow:hidden;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 3px),transparent calc(10% - 3px) 10%);mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 3px),transparent calc(10% - 3px) 10%);
+  background:var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--accent)}
+.lh-current{margin-top:4px;font-size:15px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lh-current b{color:var(--text)}
+
+.board{flex:1;min-height:0;overflow:auto;overflow-x:hidden;padding:16px 28px 20px;background:var(--panel);color:var(--text);scrollbar-gutter:stable}
+.board h2{margin:0 0 6px;font:800 clamp(26px,3.6vw,38px)/1.1 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.board .kicker{color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font:700 13px var(--f-mono)}
+.board p,.board li{font-size:19px;color:var(--text)}
+.board ul,.board ol{padding-left:24px}
+.board img.diagram{display:block;max-width:100%;max-height:48vh;margin:16px auto;background:#fff;border-radius:8px;border:2px solid var(--text)}
+.board .qcard{margin:14px 0;padding:14px 16px;background:var(--panel2);border:2px solid var(--line);border-radius:10px}
+.board .qcard label{display:block;margin:4px 0;font-size:17px}
+.board .qcard input[type=text]{background:var(--field);border:2px solid var(--line);border-radius:8px;padding:6px 10px;width:min(100%,420px);color:var(--text)}
+.board .qcard .btn{margin-left:6px}
+.board .ok{color:var(--ok)}.board .bad{color:var(--danger)}
+.board .tag{font-size:14px;color:var(--muted)}
+.nudge{display:none;margin:0 16px 8px;padding:8px 12px;border-radius:8px;background:var(--hi);border:2px solid var(--text);color:var(--hi-ink);font-size:16px;font-weight:700}
+.nudge.show{display:block}
+
+/* teaching blocks: the screen supports the spoken lesson, so each block is short and stands on its own */
+.board .blk{max-width:74ch;margin:0 0 16px}
+.board .blk-text{font-size:21px;line-height:1.55;margin:0 0 16px}
+.board .blk-heading{margin:22px 0 6px;font:800 24px var(--f-display)}
+.board .blk-list{margin:0 0 16px;padding-left:26px}
+.board .blk-list li{margin:6px 0;font-size:20px}
+.board .blk-label{display:block;font:700 12px var(--f-mono);text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:4px}
+.board .blk-def{padding:14px 18px 16px;background:var(--panel);border:2px solid var(--text);border-radius:12px;box-shadow:5px 5px 0 var(--shadow)}
+.board .blk-def .term{display:block;font:800 24px var(--f-display);color:var(--text)}
+.board .blk-def p{margin:4px 0 0;font-size:20px}
+.board .blk-example{padding:14px 18px 16px;border:2px dashed var(--muted);border-radius:12px}
+.board .blk-example p{margin:0;font-size:20px}
+.board .blk-terms{display:flex;flex-wrap:wrap;gap:8px}
+.board .blk-terms .tchip{background:var(--hi);color:var(--hi-ink);border-radius:6px;padding:3px 12px;font-size:18px;font-weight:700}
+.board .blk-terms .tchip b{display:block;color:var(--hi-ink)}
+.board .blk-terms .tchip span{font-size:14px;font-weight:400}
+.board .blk-tip{padding:12px 18px 14px;background:var(--hi);color:var(--hi-ink);border-radius:12px}
+.board .blk-tip .blk-label{color:var(--hi-ink)}
+.board .blk-tip p{margin:0;font-size:20px;font-weight:700;color:var(--hi-ink)}
+.board .blk-diagram{display:block;max-width:100%;max-height:48vh;margin:16px auto;background:#fff;border-radius:12px;border:2px solid var(--text)}
+
+/* the student's turn: the question, and that the tutor is waiting */
+.turn{margin:0 16px 8px;padding:12px 18px 14px;border:2px solid var(--text);border-radius:12px;background:var(--panel2)}
+.turn-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.turn-badge{font:700 14px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);border-radius:6px;padding:2px 12px}
+.turn[data-phase="waiting"]{border-color:var(--accent);background:var(--panel)}
+.turn[data-phase="waiting"] .turn-badge{background:var(--hi);color:var(--hi-ink)}
+.turn[data-phase="remediating"] .turn-badge{background:var(--purple);color:#fff}
+.turn[data-phase="evaluating"] .turn-badge,.turn[data-phase="answered"] .turn-badge{background:var(--text);color:var(--bg)}
+.turn-sub{color:var(--muted);font-size:15px}
+.turn-q{margin:8px 0 0;font:600 clamp(22px,3vw,30px)/1.25 var(--f-display);text-wrap:balance}
+.turn-a{margin:8px 0 0;font-size:18px;color:var(--muted)}
+.turn-a b{color:var(--text)}
+.turn-hint{margin:8px 0 0;font-size:16px;color:var(--muted)}
+.turn-note{margin:8px 0 0;font-size:19px;line-height:1.45}
+
+/* voice dock: the caption, then the controls */
+.caption{padding:6px 20px;border-top:1.5px solid var(--line);max-height:3.8em;overflow:auto;color:var(--muted);font-size:16px;line-height:1.4}
+.caption:empty{display:none}
+.chat{border-top:1.5px solid var(--line);padding:4px 16px;font-size:16px}
+.chat:not([open]){display:none}
+.chat summary{cursor:pointer;color:var(--muted);font-weight:700}
+.chat-log{max-height:180px;overflow:auto;margin-top:6px}
+.chat-log p{margin:4px 0}
+.controls{display:flex;gap:8px;padding:8px 16px 10px;background:var(--panel);border-top:1.5px solid var(--line);align-items:center;flex-wrap:wrap}
+.btn{background:var(--panel);border:2px solid var(--text);border-radius:12px;padding:0 16px;min-height:46px;font-weight:700;font-size:16px;color:var(--text)}
+.btn:hover:not(:disabled){background:var(--panel2)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.rec,.btn#mic.rec{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.btn.pulse{animation:ring 1.4s ease-out infinite;border-color:var(--accent)}
+#mic{min-height:52px;padding:0 22px;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:18px}
+#mic.rec{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+#stop{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.spacer{flex:1}
+.ask{display:flex;gap:8px;flex:1 1 260px;min-width:0}
+.ask input{flex:1;min-width:0;width:100%;background:var(--field);border:2px solid var(--line);border-radius:12px;padding:0 14px;min-height:46px;color:var(--text);font-size:17px}
+.manual{display:flex;gap:8px}
+
+/* exam question: a square answer sheet with round bubbles, so it never looks like a teaching check */
+.exam{max-width:80ch;margin:0 auto;background:var(--sheet);color:var(--sheet-ink);border:2px solid var(--text);outline:1.5px solid var(--text);outline-offset:-8px;border-radius:0;overflow:hidden}
+.exam-banner{display:flex;justify-content:space-between;gap:4px 16px;flex-wrap:wrap;margin:22px 22px 0;padding-bottom:10px;border-bottom:2px solid var(--text);font:700 14px var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.exam-banner b{color:var(--accent)}
+.exam-body{padding:16px 22px 24px}
+.exam-stem{margin:0 0 16px;font-size:22px;line-height:1.5;font-weight:600;color:var(--sheet-ink)}
+.exam-options{border:0;margin:0;padding:0;display:grid;gap:10px}
+.opt{position:relative;display:flex;gap:14px;align-items:center;min-height:60px;padding:10px 14px;border:2px solid var(--sheet-line);border-radius:0;background:var(--sheet);cursor:pointer;font-size:19px;line-height:1.35;color:var(--sheet-ink)}
+.opt:hover{border-color:var(--text)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .key{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font:700 17px var(--f-mono)}
+.opt .otext{flex:1}
+.opt .tagline{display:block;font:700 13px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.opt:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:3px}
+.opt.sel{background:var(--hi);color:var(--hi-ink);border-color:var(--text)}
+.opt.sel .key{background:var(--hi-ink);color:var(--hi);border-color:var(--hi-ink)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg);color:var(--sheet-ink)}
+.opt.right .key{background:var(--ok);border-color:var(--ok);color:var(--ok-bg)}
+.opt.right .tagline{color:var(--ok)}
+.opt.wrong{border-color:var(--danger);background:var(--danger-bg);color:var(--sheet-ink)}
+.opt.wrong .key{background:var(--danger);border-color:var(--danger);color:var(--danger-bg)}
+.opt.wrong .tagline{color:var(--danger)}
+.exam.locked .opt{cursor:default}
+.exam-text{width:100%;font:inherit;font-size:19px;padding:10px 14px;border:2px solid var(--sheet-line);border-radius:0;background:var(--sheet);color:var(--sheet-ink)}
+.exam-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+.exam-hint{font:13px var(--f-mono);color:var(--muted)}
+.exam-result{margin-top:16px;padding:14px 18px;border-radius:0;border:2px solid}
+.exam-result.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--sheet-ink)}
+.exam-result.bad{background:var(--danger-bg);border-color:var(--danger);color:var(--sheet-ink)}
+.exam-result .verdict{display:block;font:800 clamp(26px,4vw,36px)/1.1 var(--f-display);margin-bottom:6px}
+.exam-result.ok .verdict{color:var(--ok)}.exam-result.bad .verdict{color:var(--danger)}
+.exam-result p{margin:0 0 10px;font-size:18px;line-height:1.45;color:inherit}
+.board .exam p,.board .exam li{color:var(--sheet-ink)}
+.board .exam-result p{color:var(--sheet-ink)}
+.exam .btn{background:var(--sheet);border-color:var(--text);color:var(--sheet-ink)}
+.exam .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* the lesson is over */
+.done-card{max-width:74ch;margin:0 auto}
+.done-card h2{margin:0 0 8px}
+
+/* splitter */
+.splitter{cursor:col-resize;position:relative}
+.splitter::after{content:"";position:absolute;left:4px;top:50%;height:48px;width:3px;margin-top:-24px;border-radius:2px;background:var(--line)}
+.splitter:hover::after{background:var(--accent)}
+
+/* notebook: paper in both themes */
+.notebook{min-width:0;min-height:0;position:relative}
+.page{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--paper);color:var(--ink);border:2px solid var(--text);border-radius:12px 0 0 12px;box-shadow:5px 5px 0 var(--shadow);position:relative;overflow:hidden}
+.page::before{content:"";position:absolute;left:34px;top:0;bottom:0;width:2px;background:#e3a0a0;opacity:.7;z-index:1}
+.holes{position:absolute;left:9px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-around;padding:40px 0;z-index:2;pointer-events:none}
+.holes i{width:12px;height:12px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.nb-tools{display:flex;gap:6px;padding:8px 10px 6px 46px;border-bottom:1px solid var(--rule);flex-wrap:wrap;align-items:center;position:relative;z-index:2}
+.nb-tools button{background:#efe8d3;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;font-size:14px;color:var(--ink)}
+.nb-tools button:hover{background:#e6dcc0}
+.nb-tools input{flex:1;min-width:90px;border:1px solid var(--rule);border-radius:6px;padding:3px 8px;font-size:14px;background:#fffdf6;color:var(--ink)}
+.note-title{border:0;background:transparent;font:700 22px/1.3 Georgia,"Times New Roman",serif;color:var(--ink);padding:10px 14px 4px 46px;outline:none;width:100%;position:relative;z-index:2}
+.note-body{flex:1;border:0;outline:none;resize:none;background:repeating-linear-gradient(transparent,transparent 27px,var(--rule) 27px,var(--rule) 28px);background-attachment:local;font:17px/28px "Segoe Print","Bradley Hand","Comic Sans MS",Georgia,serif;color:var(--ink);padding:2px 16px 8px 46px;width:100%;position:relative;z-index:2}
+.nb-foot{display:flex;justify-content:space-between;padding:5px 14px 6px 46px;font-size:13px;color:#6b6650;border-top:1px solid var(--rule);position:relative;z-index:2}
+.tabs{display:flex;flex-direction:column;gap:3px;padding-top:18px;overflow-y:auto;overflow-x:hidden;width:34px;flex:none;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{width:34px;min-height:96px;max-height:150px;border:0;writing-mode:vertical-rl;transform:rotate(180deg);padding:10px 4px;font-size:13px;font-weight:600;color:#2b2a27;text-align:left;box-shadow:2px 2px 6px rgba(0,0,0,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:width .12s;border-radius:8px 0 0 8px}
+.tab:hover{width:40px;margin-left:-6px}
+.tab.active{width:42px;margin-left:-8px;filter:brightness(1.08)}
+.tab.add{background:#2a3542;color:#e6edf3;min-height:44px;writing-mode:horizontal-tb;transform:none;font-size:18px;padding:0;border-radius:0 8px 8px 0;text-align:center}
+.tab.hidden{display:none}
+.empty{padding:30px 46px;color:#6b6650}
+
+@media (max-width:900px){
+  body{font-size:17px;overflow:auto;height:auto;min-height:100%}
+  html{height:auto}
+  .layout{flex:none}
+  .screen{overflow:visible;min-height:calc(100vh - 150px)}
+  .board{min-height:50vh;overflow:visible}
+  .controls{position:sticky;bottom:0;z-index:4;border-radius:0 0 12px 12px;box-shadow:0 -6px 12px -8px var(--shadow)}
+  .intro{position:fixed}
+  .tbtn,.settings summary{min-height:38px;padding:0 10px;font-size:15px}
+  .topbar .chip{display:none}
+  .layout{padding:8px 10px 10px}
+  body.nb-open .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 60vh;gap:8px}
+  body.nb-open .splitter{display:none}
+  .page{border-radius:12px}
+  .tabs{display:none}
+  .topbar{padding:6px 10px;gap:8px}
+  .lesson-title{display:none}
+  .stepper .step{font-size:12px;padding:2px 8px}
+  .board{padding:16px}
+  .lesson-head{padding:10px 14px}
+  .lh-progress{flex:1 1 100%}
+  .tstatus{min-width:0;font-size:12px;padding:3px 10px 3px 8px;gap:6px}
+  .controls{gap:8px;padding:8px 10px 10px}
+  #mic{flex:1 1 auto}
+  .ask{flex:1 1 100%;order:9}
+  .caption{padding:6px 14px;font-size:16px}
+  .board .blk-text{font-size:19px}
+  .exam-banner{margin:16px 14px 0;font-size:12px}
+  .exam-body{padding:14px 14px 18px}
+  .exam-stem{font-size:19px}
+  .opt{font-size:18px;min-height:54px}
+}
+/* launch screen: a card drops in, the highlighter swipes under "Room", voice bars pulse, then it lifts away once the
+   lesson has loaded. Reduced motion shows the finished card and removes it without movement. Any click or key skips it. */
+.launch{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .45s ease,visibility .45s}
+.launch.out{opacity:0;visibility:hidden}
+.launch.out .l-card{transform:translateY(-28px) scale(.98)}
+.l-card{background:var(--panel);border:2px solid var(--text);border-radius:14px;box-shadow:8px 8px 0 var(--shadow);padding:34px 46px 28px;
+  text-align:center;transition:transform .45s cubic-bezier(.5,0,.75,0);animation:l-drop .55s cubic-bezier(.2,1.3,.4,1) both}
+.l-kicker{font:700 13px var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);animation:l-up .4s .7s ease-out both}
+.l-word{font:800 clamp(44px,9vw,72px)/1.05 var(--f-display);letter-spacing:-.02em;margin:10px 0 18px;color:var(--text)}
+.l-word span{position:relative;color:var(--accent);display:inline-block}
+.l-word span::before{content:"";position:absolute;left:-6px;right:-6px;bottom:-10%;height:16%;background:var(--hi);border-radius:4px;z-index:-1;
+  transform-origin:left;animation:l-swipe .45s .45s cubic-bezier(.6,0,.2,1) both}
+.l-word b{font-weight:inherit;position:relative;z-index:0;display:inline-block}
+.l-wave{display:flex;justify-content:center;align-items:center;gap:6px;height:30px;animation:l-up .4s .9s ease-out both}
+.l-wave i{width:6px;height:100%;border-radius:3px;background:var(--accent);transform-origin:center;animation:l-bar 1s ease-in-out infinite}
+.l-wave i:nth-child(2){animation-delay:-.8s}.l-wave i:nth-child(3){animation-delay:-.6s}.l-wave i:nth-child(4){animation-delay:-.4s}.l-wave i:nth-child(5){animation-delay:-.2s}
+.l-msg{margin-top:12px;font:15px var(--f-mono);color:var(--muted);animation:l-up .4s 1s ease-out both}
+@keyframes l-drop{from{opacity:0;transform:translateY(22px) scale(.94)}}
+@keyframes l-up{from{opacity:0;transform:translateY(8px)}}
+@keyframes l-swipe{from{transform:scaleX(0)}}
+@keyframes l-bar{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion: reduce){.l-wave i{transform:scaleY(.6)}}
+</style>
+<script>/* apply the saved theme before first paint, so the launch screen and page don't flash the wrong colours */
+try{ const t = JSON.parse(localStorage.getItem('classroom.theme') || '"auto"'); if(t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t) }catch(e){}
+</script>
+</head>
+<body>
+<div class="launch" id="launch" aria-hidden="true">
+  <div class="l-card">
+    <div class="l-kicker">Security+ · SY0-701</div>
+    <div class="l-word"><b>Tutor</b><span><b>Room</b></span></div>
+    <div class="l-wave"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="l-msg" id="launchMsg">Getting your lesson ready…</div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">Tutor<span>Room</span></div>
+  <div class="lesson-title" id="lessonTitle">Loading lesson…</div>
+  <div class="chip">Exam in <b id="examDays">–</b> days</div>
+  <button type="button" class="tbtn" id="bNotes" aria-expanded="false" aria-controls="notebook">Notes</button>
+  <button type="button" class="tbtn" id="bHist" aria-expanded="false" aria-controls="chatPanel">History</button>
+  <details class="settings" id="settings">
+    <summary>Settings</summary>
+    <div class="pop">
+      <div class="chip" id="clock">–</div>
+      <input id="date" type="date" aria-label="Lesson date">
+      <input id="tok" type="password" placeholder="access token (if set)" aria-label="Access token">
+      <div class="row">
+        <button type="button" id="load">Load</button>
+        <button type="button" id="forget">Forget token</button>
+        <button type="button" id="bTheme">Theme: Auto</button>
+        <a href="/admin">admin</a>
+      </div>
+    </div>
+  </details>
+</header>
+<div id="msg" class="chip" style="margin:0 16px" hidden></div>
+
+<div class="layout" id="layout">
+  <section class="classroom">
+    <div class="stepper" id="stepper"></div>
+
+    <div class="screen">
+      <header class="lesson-head" id="lessonHead">
+        <div class="lh-main">
+          <div class="lh-kicker"><span id="lhCourse"></span><span id="lhNo"></span><span class="lh-practice" id="lhPractice" hidden>Practice lesson</span></div>
+          <h1 class="lh-title" id="lhTitle">Loading lesson…</h1>
+          <div class="lh-meta"><span class="lh-chip" id="lhSection" hidden></span><span class="lh-chip" id="lhObjective" hidden></span></div>
+        </div>
+        <div class="lh-progress">
+          <div class="lh-plabel"><span id="lhPName">Progress</span><b id="lhPct">0%</b></div>
+          <div class="meter" id="meter" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="meterFill"></i></div>
+          <div class="lh-current" id="lhCurrent" hidden>Current: <b id="lhCurrentName"></b></div>
+        </div>
+      </header>
+      <div class="screen-head">
+        <div class="avatar" id="avatar"></div>
+        <div class="who"><b>Your tutor</b><small id="stageLabel">Stage</small></div>
+        <span class="tstatus" id="teacherStatus" role="status" aria-live="polite" data-s="ready"><i aria-hidden="true"></i><span id="teacherStatusText">Ready</span></span>
+        <span class="state" id="state" title="Voice">Ready</span>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div class="intro" id="intro" hidden>
+        <div class="kicker">Today's lesson</div>
+        <h2 id="introTitle"></h2>
+        <p id="introText">Read each slide, and hold the mic to ask anything. Use Next when you're ready.</p>
+        <button class="btn primary" id="start">Start lesson</button>
+      </div>
+      <div class="board" id="board"></div>
+      <section class="turn" id="turn" hidden aria-live="polite">
+        <div class="turn-top"><span class="turn-badge" id="turnBadge">Your turn</span><span class="turn-sub" id="turnSub"></span></div>
+        <p class="turn-q" id="turnQ"></p>
+        <p class="turn-a" id="turnA" hidden></p>
+        <p class="turn-note" id="turnNote" hidden></p>
+        <p class="turn-hint" id="turnHint"></p>
+      </section>
+      <div class="nudge" id="nudge">Time is up for this stage. Carry on if you need to, or hit Next when you're ready.</div>
+      <div class="caption" id="caption"></div>
+      <details class="chat" id="chatPanel"><summary>Chat history</summary><div class="chat-log" id="chatlog"></div></details>
+
+      <div class="controls">
+        <button class="btn" id="micAllow" hidden>🎤 Allow microphone</button>
+        <button class="btn" id="mic" title="Hold to ask a question. Let go to send it.">🎙 Hold to ask</button>
+        <button class="btn" id="read" title="Read from this slide and carry on through the lesson">🔊 Read</button>
+        <button class="btn" id="pause">⏸ Pause</button>
+        <button class="btn" id="replay">↺ Repeat</button>
+        <button class="btn" id="stop" title="Stop speaking and clear anything queued">⏹ Stop</button>
+        <button class="btn" id="skip" hidden title="Skip this question and carry on">Skip ›</button>
+        <form class="ask" id="askForm">
+          <input id="askInput" placeholder="Ask the tutor about this lesson…" autocomplete="off" maxlength="2000">
+          <button class="btn" id="askBtn">Ask</button>
+        </form>
+        <span class="spacer"></span>
+        <span class="manual" id="manualNav">
+          <button class="btn" id="prev">← Back</button>
+          <button class="btn primary" id="next">Next →</button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <div class="splitter" id="splitter" title="Drag to resize"></div>
+
+  <aside class="notebook" id="notebook" aria-label="Notes">
+    <div class="page">
+      <div class="holes"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="nb-tools">
+        <button id="newNote">+ Note</button>
+        <button id="stamp" title="Insert stage + time">⏱ Stamp</button>
+        <button id="check" title="Insert checkbox line">☐ Item</button>
+        <input id="search" placeholder="Search all notes…" aria-label="Search notes">
+        <button id="export" title="Download all notes as Markdown">⬇ Export</button>
+        <button id="del" title="Delete this note">🗑</button>
+      </div>
+      <input class="note-title" id="noteTitle" placeholder="Untitled note" maxlength="120" disabled>
+      <textarea class="note-body" id="noteBody" placeholder="Write notes here…" spellcheck="true" maxlength="50000" disabled></textarea>
+      <div class="nb-foot"><span id="wc">0 words</span><span id="saved">Saved</span></div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </aside>
+</div>
+
+<script>
+/* Every piece of lesson, chat or note text is written with textContent or as an image data URI.
+   Nothing from the model or the student is ever parsed as HTML. */
+const $ = s => document.querySelector(s);
+const TK = 'tutorToken', NB_CACHE = 'classroom.notesCache', NB_W = 'classroom.nbw';
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch(e){ return d } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)) } catch(e){} }
+};
+function el(tag, txt, cls){ const e = document.createElement(tag); if(txt != null) e.textContent = txt; if(cls) e.className = cls; return e }
+function localDate(d = new Date()){ return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) }
+const day = () => $('#date').value;
+const pause = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- access and API ---------- */
+function hdr(){ const t = $('#tok').value; return t ? { Authorization: 'Bearer ' + t } : {} }
+async function api(path, body){
+  try {
+    const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...hdr() }, body: body ? JSON.stringify(body) : undefined });
+    let data = {}; try { data = await r.json() } catch(e){}
+    return { ok: r.ok, status: r.status, data };
+  } catch(e){ return { ok: false, status: 0, data: { error: 'Cannot reach the tutor. Is Docker running?' } } }
+}
+function rememberToken(){ try { $('#tok').value ? localStorage.setItem(TK, $('#tok').value) : localStorage.removeItem(TK) } catch(e){} }
+$('#forget').onclick = () => { try { localStorage.removeItem(TK) } catch(e){} $('#tok').value = '' };
+
+/* ---------- markdown -> safe DOM ---------- */
+function inline(parent, text){
+  text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).forEach(part => {
+    if(/^\*\*.+\*\*$/.test(part)) parent.append(el('b', part.slice(2, -2)));
+    else if(/^`.+`$/.test(part)) parent.append(el('code', part.slice(1, -1)));
+    else if(part) parent.append(document.createTextNode(part));
+  });
+}
+// Model-written SVG becomes an <img> with a data: URI, so it can't run script or load anything.
+function bodyInto(out, lines){
+  let list = null, fence = null;
+  lines.forEach(line => {
+    if(fence !== null){
+      if(line.trim().startsWith('```')){
+        const img = el('img'); img.alt = 'Diagram';
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(fence.join('\n'));
+        img.className = 'diagram'; out.append(img); fence = null;
+      } else fence.push(line);
+      return;
+    }
+    if(/^```\s*svg/i.test(line.trim())){ fence = []; list = null; return }
+    let m;
+    if((m = line.match(/^[-*] (.*)/))){ if(!list){ list = el('ul'); out.append(list) } const li = el('li'); inline(li, m[1]); list.append(li) }
+    else if(line.trim()){ list = null; const p = el('p'); inline(p, line); out.append(p) }
+    else list = null;
+  });
+}
+
+/* ---------- lesson: stages, slides, timer ---------- */
+let L = null;                 // last lesson response from the API (no answer keys)
+let stages = [], slides = [];  // stages: {name, minutes}; slides: {stage, title, lines}
+let idx = 0, curStage = -1, remaining = 0, running = true, quizMode = false, shownSlide = -1;
+let engine = lessonInit(), steps = [], lessonAct = null;   // the lesson engine, its steps, and the action that runs the lesson
+
+function buildFrom(l){
+  L = l;
+  const names = l.stages || [];
+  let s = -1; stages = []; slides = [];
+  l.markdown.split('\n').forEach(line => {
+    if(line.startsWith('<!--')) return;
+    let m;
+    if((m = line.match(/^## (.*)/))){
+      s++;
+      const meta = names[s] || { name: m[1].trim(), minutes: 5 };
+      stages.push({ name: meta.name, minutes: meta.minutes });
+      slides.push({ stage: s, title: m[1].trim(), lines: [] });
+    } else if((m = line.match(/^### (.*)/)) && s >= 0){
+      slides.push({ stage: s, title: m[1].trim(), lines: [] });
+    } else if(slides.length) slides[slides.length - 1].lines.push(line);
+  });
+}
+function renderStepper(){
+  const st = $('#stepper'); st.replaceChildren();
+  stages.forEach((s, i) => {
+    const b = el('button', null, 'step'); b.dataset.i = i;
+    b.append(el('b', s.name), document.createTextNode(s.minutes + ' min'));
+    b.onclick = () => go(slides.findIndex(x => x.stage === i));
+    st.append(b);
+  });
+}
+function markStepper(){
+  const cur = slides[idx] ? slides[idx].stage : -1;
+  [...$('#stepper').children].forEach((b, i) => { b.classList.toggle('active', i === cur); b.classList.toggle('done', i < cur) });
+}
+let timerActive = false;               // a section with minutes is being timed
+const NUDGE_LEGACY = "Time is up for this stage. The lesson carries on; use Next to skip ahead.";
+const NUDGE_ENGINE = 'This section is past its planned time.';
+function resetTimer(minutes, nudgeText){
+  timerActive = minutes > 0; remaining = minutes * 60;
+  $('#nudge').classList.remove('show'); if(nudgeText) $('#nudge').textContent = nudgeText;
+  $('#timer').style.visibility = timerActive ? 'visible' : 'hidden';
+  renderTimer();
+}
+function startStage(s){ resetTimer(stages[s].minutes, NUDGE_LEGACY) }
+// How far through today's lesson the student is: the engine's steps (spoken lines, questions, exam questions).
+function legacyPct(){ return steps.length ? Math.round(100 * Math.min(engine.i, steps.length) / steps.length) : 0 }
+// Display only: the stage timer, the section strip, the header and the board. What is spoken is decided by the lesson engine.
+function showSlideAt(i){
+  if(!slides.length) return;
+  idx = Math.max(0, Math.min(slides.length - 1, i));
+  const stage = slides[idx].stage;
+  if(stage !== curStage){ curStage = stage; startStage(stage) }
+  if(shownSlide !== idx || quizMode){ shownSlide = idx; showSlide() }
+}
+// A slide chosen by the student (stepper, Back): the lesson carries on from its first line.
+function go(i){
+  const j = firstStepOf(steps, Math.max(0, Math.min(slides.length - 1, i)));
+  if(j >= 0) startAt(j);
+}
+function showSlide(){
+  quizMode = false;
+  const s = slides[idx], st = stages[s.stage];
+  if(LS.state.section.index !== s.stage) lsApply({ type: 'section_started', index: s.stage, name: st.name, minutes: st.minutes });
+  lsApply({ type: 'teaching', title: s.title, blocks: blocksFromLines(s.lines), progress: { pct: legacyPct() } });   // the board draws from this
+  $('#stageLabel').textContent = `Stage ${s.stage + 1} of ${stages.length} · ${st.name}`;
+  $('#prev').disabled = idx === 0;
+  $('#next').disabled = false;
+  const endOfStage = idx === slides.length - 1 || slides[idx + 1].stage !== s.stage;
+  $('#next').textContent = endOfStage ? (s.stage === stages.length - 1 ? 'Finish lesson ✓' : 'Next stage →') : 'Next →';
+  markStepper();
+}
+// Next skips to the next slide and the lesson carries on. From the last slide it goes to the exam questions, or to the end.
+function next(){
+  if(driver.mode !== 'legacy' || !steps.length) return;
+  startAt(slideStartAfter(steps, engine.i));
+}
+$('#next').onclick = next;
+$('#prev').onclick = () => go(idx - 1);
+$('#replay').onclick = () => {
+  if(driver.mode !== 'legacy') return engineReplay();
+  if(steps.length && engine.i < steps.length) startAt(engine.i);   // say this step again and carry on
+};
+$('#pause').onclick = function(){
+  if(driver.mode !== 'legacy'){ halted ? engineResume() : engineHalt(); return }   // the engine owns the lesson; Pause holds it
+  if(running){ running = false; this.textContent = '▶ Resume'; reset(M.view().caption) }   // a new action pauses the lesson at this step
+  else { running = true; this.textContent = '⏸ Pause'; if(steps.length && engine.i < steps.length) startAt(engine.i) }
+};
+document.addEventListener('keydown', e => {
+  if(e.target.matches('input,textarea,select') || quizMode || !LS.state.manual) return;   // Back and Next keys only where the page has Back and Next
+  if(e.key === 'ArrowRight') next();
+  if(e.key === 'ArrowLeft') $('#prev').click();
+});
+
+function fmt(sec){ const a = Math.abs(sec), m = String(Math.floor(a / 60)).padStart(2, '0'), s = String(a % 60).padStart(2, '0'); return (sec < 0 ? '+' : '') + m + ':' + s }
+function renderTimer(){ const t = $('#timer'); t.textContent = fmt(remaining); t.classList.toggle('over', remaining < 0) }
+setInterval(() => {
+  if(!running || quizMode || !timerActive) return;
+  remaining--; renderTimer();
+  if(remaining === -1) $('#nudge').classList.add('show');   // gentle prompt, the clock keeps running, no auto-skip
+}, 1000);
+
+/* ---------- ask the tutor (typed) ---------- */
+function bubble(role, txt){
+  const p = el('p'); p.append(el('b', role === 'user' ? 'You: ' : 'Tutor: '), document.createTextNode(txt));
+  $('#chatlog').append(p); $('#chatlog').scrollTop = 1e9;
+}
+$('#askForm').onsubmit = e => {
+  e.preventDefault();
+  const q = $('#askInput').value.trim();
+  if(q && waitingAct()) answerWaiting(q);
+  else if(q){ holdForQuestion(); ask(q, begin(null), false) }
+};
+
+/* ---------- tutor state: one machine, one speech controller ----------
+   The machine holds the state and the caption. Only the speech controller below changes the state, through
+   M.to(next, token). Each action has a token; a superseded action's token is stale and can't change anything.
+   The UI never writes state: it subscribes (render) and reads the view. The block between the markers is pure
+   JavaScript and is tested under Node (apps/api/tests/test_voice.py). */
+/* @@voice-core */
+const TUTOR_ALLOWED = {
+  idle: ['idle', 'recording', 'transcribing', 'thinking', 'speaking', 'waiting'],
+  recording: ['idle', 'transcribing'],
+  transcribing: ['idle', 'thinking', 'waiting'],   // a failed answer while a question waits goes back to waiting
+  thinking: ['idle', 'recording', 'speaking', 'waiting'],
+  speaking: ['idle', 'recording', 'thinking', 'speaking', 'waiting'],
+  waiting: ['idle', 'recording', 'thinking', 'speaking', 'waiting'],
+};
+function createMachine(){
+  let state = 'idle', token = 0, caption = '';
+  const subs = [];
+  const view = () => ({ state, caption, token });
+  const emit = () => subs.forEach(f => f(view()));
+  return {
+    view,
+    subscribe(f){ subs.push(f); f(view()) },
+    get state(){ return state },
+    get token(){ return token },
+    // A new action supersedes every earlier one: their tokens become stale.
+    begin(){ return ++token },
+    // Only the speech controller calls this. A stale token, or a move the table doesn't allow, changes nothing.
+    to(next, t, patch){
+      if(t !== token || !TUTOR_ALLOWED[state].includes(next)) return false;
+      state = next;
+      if(patch && 'caption' in patch) caption = patch.caption;
+      emit();
+      return true;
+    },
+    // Caption text only (for example, the slide's name). No state change.
+    say(text){ caption = text; emit() },
+  };
+}
+// Sentences for speech. Same rule as the server's SentenceSplitter: . ! or ? (optionally then a quote or bracket), then whitespace.
+function splitSentences(text){
+  const out = [], re = /[.!?]['")\]]?\s+/g;
+  let last = 0, m;
+  while((m = re.exec(text))){ const s = text.slice(last, m.index + m[0].length).trim(); if(s) out.push(s); last = m.index + m[0].length }
+  const rest = text.slice(last).trim(); if(rest) out.push(rest);
+  return out;
+}
+// Long sentences go out in clauses so the first sound starts sooner. Same rule as tts.split_for_speech (keep in step).
+function splitForSpeech(sentence){
+  const s = sentence.trim();
+  if(s.length < 60) return s ? [s] : [];
+  const cutAt = m => /[,;:]/.test(m[0]) ? m.index + 1 : m.index;
+  const pieces = []; let rest = s;
+  for(;;){
+    let cut = -1, m;
+    const re = /[,;:](?=\s)|\s(?=(?:before|after|while|because|which|when|so that)\s)/g;
+    while((m = re.exec(rest))){ const c = cutAt(m); if(c >= 40){ cut = c; break } }
+    if(cut < 0 || rest.length - cut < 15) break;
+    pieces.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).trim();
+  }
+  pieces.push(rest);
+  return pieces.filter(Boolean);
+}
+// Spoken forms for terms (packs/<pack>/pronounce.yaml). Same matching as tutor/pronounce.py: whole words, case-sensitive.
+function escapeRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+function applyPronounce(text, rules){
+  let out = text;
+  (rules || []).forEach(([written, say]) => { out = out.replace(new RegExp('(?<!\\w)' + escapeRe(written) + '(?!\\w)', 'g'), () => say) });
+  return out;
+}
+/* @@end-voice-core */
+
+/* @@lesson-engine */
+/* What happens next in the lesson. Pure: no DOM, no network, no speech. The page sends an event and gets back the new
+   state and the effects to carry out. Effects that wait for something (speech, a student's answer, marking, the marker)
+   carry a seq; the event that answers them must carry the same seq, so a repeated or late event changes nothing.
+   The model writes the lesson content. It never decides a state. */
+const MAX_ATTEMPTS = 2;   // a check is answered at most twice; after that the lesson moves on
+const CLOSING = "That's the end of today's lesson. Write one line about today to finish.";
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+function lessonInit(){ return { state: 'INTRO', i: 0, attempts: 0, verdict: null, seq: 0 } }
+
+// Spoken text of one slide without the stage heading's markup: the same sentences Read has always spoken.
+function slideText(s){
+  let fence = false; const out = [s.title];
+  s.lines.forEach(l => {
+    const t = l.trim();
+    if(t.startsWith('```')){ fence = !fence; return }
+    if(fence || !t) return;
+    out.push(t.replace(/\*\*|`/g, '').replace(/^[-*] /, ''));
+  });
+  return out.join('. ');
+}
+
+// One step per spoken line, check-in question or exam question, in the order the lesson runs them.
+function buildSteps(slides, scripts, quiz){
+  const steps = [];
+  slides.forEach((s, slide) => {
+    const sc = scripts && scripts[String(slide)];
+    if(sc && sc.length) sc.forEach((ln, qi) => steps.push({ kind: ln.question ? 'check' : 'say', slide, qi, text: ln.text }));
+    else splitSentences(slideText(s)).forEach(text => steps.push({ kind: 'say', slide, qi: -1, text }));
+  });
+  (quiz || []).forEach(q => steps.push({ kind: 'exam', slide: -1, qi: -1, id: q.id, objective: q.objective,
+    text: q.q, options: q.options || [], type: q.type }));
+  return steps;
+}
+function firstStepOf(steps, slide){ return steps.findIndex(s => s.slide === slide) }
+// The first step of the next slide, else the first exam question, else the end of the lesson.
+function slideStartAfter(steps, i){
+  const cur = steps[i] ? steps[i].slide : -1;
+  const j = steps.findIndex((s, k) => k > i && s.kind !== 'exam' && s.slide !== cur);
+  if(j >= 0) return j;
+  const e = steps.findIndex(s => s.kind === 'exam');
+  return e >= 0 ? e : steps.length;
+}
+function examSpeech(it){
+  if(!it.options.length) return it.text;
+  return `${it.text} ${it.options.map((o, k) => `${LETTERS[k] || k + 1}, ${o}.`).join(' ')} Which is it?`;
+}
+// Which option a spoken or typed answer means: a letter (A to D, "option b"), the option's text, or mostly its words.
+// Returns the option index, or -1 when it is not clear.
+function normalizeAnswer(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim() }
+function matchOption(text, options){
+  const t = normalizeAnswer(text);
+  if(!t) return -1;
+  const letter = t.match(/^(?:(?:option|answer|letter|choice|its|it s|it is|i think it is|i pick|i choose|i say|i would say)\s+)?([abcd])$/);
+  if(letter) return letter[1].charCodeAt(0) - 97;
+  const opts = options.map(normalizeAnswer);
+  const exact = opts.findIndex(o => o === t);
+  if(exact >= 0) return exact;
+  const inside = opts.map((o, k) => (o.length >= 3 && (t.includes(o) || o.includes(t)) ? k : -1)).filter(k => k >= 0);
+  if(inside.length === 1) return inside[0];
+  const words = s => new Set(s.split(' ').filter(w => w.length > 3));
+  const tw = words(t);
+  const scores = opts.map(o => { const ow = words(o); if(!ow.size) return 0; let n = 0; ow.forEach(w => { if(tw.has(w)) n++ }); return n / ow.size });
+  const best = Math.max(...scores);
+  const top = scores.map((x, k) => (x === best ? k : -1)).filter(k => k >= 0);
+  return best >= 0.6 && top.length === 1 ? top[0] : -1;
+}
+
+// Events: start {i}, pause, spoken {seq}, verdict {seq, verdict}, answer {seq, text}, marked {seq, feedback}, skip.
+// Effects: show {slide}, exam {i}, speak {text} (then spoken), wait {text} (then answer or skip),
+//          evaluate {answer, slide, qi} (then verdict and spoken), mark {id, answer} (then marked), complete.
+function lessonStep(eng, steps, ev){
+  const e = { ...eng }, out = [];
+  const effect = f => { e.seq++; out.push({ ...f, seq: e.seq }) };
+  const cur = () => steps[e.i];
+  const waitForAnswer = () => { e.state = 'WAITING_FOR_STUDENT'; effect({ do: 'wait', text: cur().text }) };
+  function enter(){
+    e.attempts = 0; e.verdict = null;
+    if(e.i >= steps.length){ e.state = 'COMPLETED'; effect({ do: 'speak', text: CLOSING }); return }
+    const s = cur();
+    if(s.slide >= 0) out.push({ do: 'show', slide: s.slide });
+    if(s.kind === 'exam'){ e.state = 'EXAM_QUESTION'; out.push({ do: 'exam', i: e.i }); effect({ do: 'speak', text: examSpeech(s) }); return }
+    e.state = s.kind === 'check' ? 'ASKING' : 'TEACHING';
+    effect({ do: 'speak', text: s.text });
+  }
+  const advance = () => { e.i += 1; enter() };
+  const seqOk = ev.seq === undefined || ev.seq === e.seq;
+  switch(ev.type){
+    case 'start':
+      if(ev.i !== undefined) e.i = ev.i;
+      enter();
+      break;
+    case 'pause':
+      if(e.state !== 'COMPLETED'){ e.state = 'PAUSED'; e.seq++ }
+      break;
+    case 'skip':
+      if(e.state === 'WAITING_FOR_STUDENT') advance();
+      break;
+    case 'spoken':
+      if(!seqOk) break;
+      if(e.state === 'TEACHING') advance();
+      else if(e.state === 'ASKING' || e.state === 'EXAM_QUESTION' || e.state === 'REMEDIATING') waitForAnswer();
+      else if(e.state === 'EVALUATING'){
+        const s = cur(), missed = e.verdict === 'partial' || e.verdict === 'wrong';
+        if(s.kind === 'check' && missed && e.attempts < MAX_ATTEMPTS){
+          e.state = 'REMEDIATING';
+          effect({ do: 'speak', text: `Let's try that once more. ${s.text}` });
+        } else advance();
+      }
+      else if(e.state === 'COMPLETED'){ e.seq++; out.push({ do: 'complete' }) }   // seq moves on, so a repeat is ignored
+      break;
+    case 'verdict':
+      if(seqOk && e.state === 'EVALUATING') e.verdict = ev.verdict;
+      break;
+    case 'answer': {
+      if(!seqOk || e.state !== 'WAITING_FOR_STUDENT') break;
+      const s = cur();
+      if(s.kind === 'exam'){
+        let text = ev.text;
+        if(s.options.length){
+          const k = matchOption(ev.text, s.options);
+          if(k < 0){
+            e.attempts++;
+            if(e.attempts < MAX_ATTEMPTS){ e.state = 'EXAM_QUESTION'; effect({ do: 'speak', text: 'I did not catch that. Say A, B, C or D.' }) }
+            else advance();
+            break;
+          }
+          text = s.options[k];
+        }
+        e.state = 'EVALUATING';
+        effect({ do: 'mark', id: s.id, answer: text });
+      } else {
+        e.attempts++;
+        e.state = 'EVALUATING';
+        effect({ do: 'evaluate', answer: ev.text, slide: s.slide, qi: s.qi });
+      }
+      break;
+    }
+    case 'marked':
+      if(seqOk && e.state === 'EVALUATING'){ e.verdict = 'marked'; effect({ do: 'speak', text: ev.feedback }) }
+      break;
+  }
+  return { eng: e, effects: out };
+}
+/* @@end-lesson-engine */
+
+/* @@lesson-core */
+/* The page renders lesson state; it never decides what comes next. An engine sends events (the in-page driver for
+   today's lesson files, the mock further down, and later the backend), and reduceLesson turns each one into the next
+   view state. Pure JavaScript, tested under Node (apps/api/tests/test_lesson_core.py).
+   The events and the block format are described in docs/CLASSROOM-EVENTS.md. */
+const LESSON_EVENTS = ['lesson_started', 'section_started', 'teaching', 'question', 'waiting_for_student',
+  'student_answer_received', 'evaluating', 'remediating', 'exam_question', 'answer_result', 'lesson_completed'];
+const BLOCK_TYPES = ['text', 'heading', 'list', 'definition', 'example', 'terms', 'exam_tip', 'diagram'];
+const STATUS_BY_PHASE = { idle: 'Ready', intro: 'Ready', teaching: 'Teaching', asking: 'Asking', waiting: 'Asking',
+  answered: 'Thinking', evaluating: 'Thinking', remediating: 'Explaining', exam: 'Exam question',
+  reviewing: 'Reviewing', completed: 'Lesson complete' };
+const EXAM_KINDS = { multiple_choice: 'Multiple choice', pbq_scenario: 'Scenario', acronym_recall: 'Acronym recall', free_text: 'Written answer' };
+const OPTION_KEYS = 'ABCDEFGH';
+const str = v => v == null ? '' : String(v);
+const clampPct = n => (n == null || n === '' || !Number.isFinite(+n)) ? null : Math.max(0, Math.min(100, Math.round(+n)));
+const wholeNumber = n => (n == null || n === '' || !Number.isFinite(+n)) ? null : Math.round(+n);
+// "Stage 3: Teaching" shows as "Teaching" (the number is already in the section chip).
+function cleanSection(name){ return str(name).replace(/^\s*(?:stage|section)\s*\d+\s*[:.\-–—]\s*/i, '').trim() }
+function normOptions(opts){
+  return (Array.isArray(opts) ? opts : []).slice(0, OPTION_KEYS.length).map((o, i) =>
+    (o && typeof o === 'object') ? { key: str(o.key || OPTION_KEYS[i]).toUpperCase(), text: str(o.text) } : { key: OPTION_KEYS[i], text: str(o) });
+}
+function normObjectives(list){
+  return (Array.isArray(list) ? list : []).filter(o => o && o.id != null).map(o => ({ id: str(o.id), title: str(o.title) }));
+}
+const isBlock = b => !!b && typeof b === 'object' && BLOCK_TYPES.includes(b.type);
+function initialLesson(){
+  return { phase: 'idle', manual: true, started: false, course: '', number: null, label: '', title: '', practice: false,
+    objectives: [], objective: null, sections: [], section: { index: -1, name: '', minutes: 0 }, progress: { pct: 0 },
+    teaching: { title: '', blocks: [] }, current: '', question: null, answer: '', note: '', exam: null };
+}
+// One event in, the next state out. Events the page does not know are ignored, so a newer engine can add events safely.
+// ui_* events are the page's own (the student picking an answer); everything else comes from the engine.
+function reduceLesson(s, ev){
+  if(!ev || typeof ev.type !== 'string') return s;
+  const pct = ev.progress ? clampPct(ev.progress.pct) : null;
+  const to = (phase, patch) => ({ ...s, ...(patch || {}), phase, ...(pct == null ? {} : { progress: { pct } }) });
+  const clear = { question: null, answer: '', note: '', exam: null };
+  switch(ev.type){
+    case 'ui_reset': return { ...initialLesson(), manual: s.manual };
+    case 'ui_mode': return { ...s, manual: !!ev.manual };
+    case 'ui_objectives': return { ...s, objectives: normObjectives(ev.objectives) };
+    case 'ui_select': {
+      const x = s.exam, key = str(ev.key).toUpperCase();
+      if(!x || x.submitted || x.result || x.kind !== 'choice' || !x.options.some(o => o.key === key)) return s;
+      return { ...s, exam: { ...x, selected: key } };
+    }
+    case 'ui_submitted': return s.exam && !s.exam.submitted ? { ...s, exam: { ...s.exam, submitted: true } } : s;
+    case 'ui_unsubmit': return s.exam && s.exam.submitted && !s.exam.result ? { ...s, exam: { ...s.exam, submitted: false } } : s;
+    case 'lesson_started': {
+      const l = ev.lesson || {};
+      return { ...initialLesson(), manual: s.manual, started: true, phase: 'intro', course: str(l.course), number: wholeNumber(l.number),
+        label: str(l.label), title: str(l.title), practice: !!l.practice, objectives: normObjectives(l.objectives),
+        sections: (Array.isArray(l.sections) ? l.sections : []).map((x, i) => ({ id: str(x.id != null ? x.id : i), name: cleanSection(x.name), minutes: Math.max(0, +x.minutes || 0) })) };
+    }
+    case 'section_started': {
+      let i = Number.isInteger(ev.index) ? ev.index : s.sections.findIndex(x => x.id === str(ev.id));
+      if(i < 0) i = s.section.index + 1;
+      const known = s.sections[i];
+      return to('teaching', { ...clear, section: { index: i, name: cleanSection(ev.name) || (known ? known.name : ''),
+        minutes: ev.minutes != null ? Math.max(0, +ev.minutes || 0) : (known ? known.minutes : 0) } });
+    }
+    case 'teaching': {
+      // Blocks replace what is on the board. With no blocks the board stays as it is and the lesson just carries on.
+      const blocks = Array.isArray(ev.blocks) ? ev.blocks.filter(isBlock) : null;
+      const title = ev.title != null ? str(ev.title) : null;
+      const teaching = blocks || title != null ? { title: title != null ? title : s.teaching.title, blocks: blocks || s.teaching.blocks } : s.teaching;
+      const obj = ev.objective ? normObjectives([ev.objective])[0] : null;
+      return to('teaching', { ...clear, teaching, current: title != null ? title : s.current, objective: obj || s.objective });
+    }
+    case 'question': return to('asking', { ...clear, question: { id: str(ev.id), text: str(ev.text) } });
+    case 'waiting_for_student': return to('waiting', { question: s.question || { id: str(ev.id), text: str(ev.text) } });
+    case 'student_answer_received': return to('answered', { answer: str(ev.text) });
+    case 'evaluating': return to('evaluating');
+    case 'remediating': {
+      const blocks = Array.isArray(ev.blocks) ? ev.blocks.filter(isBlock) : null;
+      return to('remediating', { note: str(ev.text), teaching: blocks ? { title: ev.title != null ? str(ev.title) : s.teaching.title, blocks } : s.teaching });
+    }
+    case 'exam_question': {
+      const options = normOptions(ev.options);
+      return to('exam', { ...clear, exam: { id: str(ev.id), objective: str(ev.objective), number: wholeNumber(ev.number), total: wholeNumber(ev.total),
+        kind: options.length ? 'choice' : 'text', label: EXAM_KINDS[ev.kind] || (options.length ? 'Multiple choice' : 'Written answer'),
+        stem: str(ev.stem != null ? ev.stem : ev.text), options, selected: null, submitted: false, result: null } });
+    }
+    case 'answer_result': {
+      const x = s.exam;
+      if(!x || (ev.id != null && str(ev.id) !== x.id)) return s;
+      const result = { correct: !!ev.correct, selected: ev.selected != null ? str(ev.selected).toUpperCase() : x.selected,
+        correctKey: ev.correct_key != null ? str(ev.correct_key).toUpperCase() : null, explanation: str(ev.explanation), requiresContinue: ev.requires_continue !== false };
+      return to('reviewing', { exam: { ...x, submitted: true, result } });
+    }
+    case 'lesson_completed': return { ...s, ...clear, phase: 'completed', progress: { pct: 100 } };
+    default: return s;
+  }
+}
+// The word on the tutor's status pill. The mic being open or the transcript being written outranks the lesson phase,
+// and an answer to the student's own question reads as Explaining.
+function teacherStatus(phase, voice, speechKind){
+  if(voice === 'recording') return 'Listening';
+  if(voice === 'transcribing') return 'Thinking';
+  if(speechKind === 'ask'){ if(voice === 'thinking') return 'Thinking'; if(voice === 'speaking') return 'Explaining' }
+  return STATUS_BY_PHASE[phase] || 'Ready';
+}
+// What the page says aloud for an event: its own lines, or (for a question or an explanation) the text it shows.
+function spokenLines(ev){
+  if(!ev) return [];
+  const say = ev.say != null ? ev.say : (ev.type === 'question' || ev.type === 'remediating' ? ev.text : '');
+  return (Array.isArray(say) ? say : [say]).map(x => str(x).trim()).filter(Boolean);
+}
+// Today's lesson files are plain Markdown; this turns one slide's lines into structured blocks. A paragraph that starts
+// "Exam tip:", "Example:" or "Definition:" becomes that kind of block. Anything else is text, a list, or a diagram.
+function labelled(line, names){
+  const m = line.match(new RegExp('^(?:\\*\\*)?(' + names + ')(?:\\*\\*)?\\s*[:\\-–—]\\s*(?:\\*\\*)?\\s*(\\S.*)$', 'i'));
+  return m ? m[2].trim() : null;
+}
+function definitionBlock(v){
+  const m = v.match(/^(.{1,70}?)\s+[—–-]\s+(.+)$/) || v.match(/^([^:]{1,70}):\s+(.+)$/);
+  return m ? { type: 'definition', term: m[1].replace(/\*\*/g, '').trim(), text: m[2] } : { type: 'definition', term: '', text: v };
+}
+function blocksFromLines(lines){
+  const out = []; let list = null, fence = null;
+  for(const line of lines){
+    if(fence !== null){
+      if(line.trim().startsWith('```')){ out.push({ type: 'diagram', svg: fence.join('\n') }); fence = null } else fence.push(line);
+      continue;
+    }
+    if(/^```\s*svg/i.test(line.trim())){ fence = []; list = null; continue }
+    const b = line.match(/^[-*] (.*)/);
+    if(b){ if(!list){ list = { type: 'list', items: [] }; out.push(list) } list.items.push(b[1]); continue }
+    list = null;
+    const t = line.trim();
+    if(!t) continue;
+    let v;
+    if((v = labelled(t, 'exam\\s+tip|tip')) !== null) out.push({ type: 'exam_tip', text: v });
+    else if((v = labelled(t, 'example')) !== null) out.push({ type: 'example', text: v });
+    else if((v = labelled(t, 'key\\s+definition|key\\s+term|definition')) !== null) out.push(definitionBlock(v));
+    else out.push({ type: 'text', text: t });
+  }
+  return out;
+}
+// The two comment lines at the top of a lesson file: objective ids, and the practice marker.
+function lessonMeta(markdown){
+  const head = str(markdown).slice(0, 400);
+  const m = head.match(/<!--\s*objectives:\s*([\d.,\s]+?)\s*-->/);
+  return { objectives: m ? m[1].split(',').map(x => x.trim()).filter(Boolean) : [], practice: /<!--\s*sample/.test(head) };
+}
+/* @@end-lesson-core */
+
+const M = createMachine();
+let curKind = null;                   // what the current speech action is (read, ask), so an answer to a question reads as Explaining
+const LABEL = { idle: 'Ready', recording: 'Listening', transcribing: 'Writing that down', thinking: 'Thinking', speaking: 'Speaking', waiting: 'Your turn' };
+// The lesson's state (what is on the board, the question, the exam, progress). Events go in through lsApply; the page
+// below only draws it. Nothing here decides what happens next.
+const LS = (() => {
+  let s = initialLesson(); const subs = [];
+  return {
+    get state(){ return s },
+    subscribe(f){ subs.push(f); f(s) },
+    apply(ev){ const n = reduceLesson(s, ev); if(n !== s){ s = n; subs.forEach(f => f(s)) } return s },
+  };
+})();
+const lsApply = ev => LS.apply(ev);
+// The tutor's status pill: the lesson phase, unless the mic or a spoken answer says otherwise.
+function renderStatus(){
+  const intro = $('#intro');
+  const label = intro && !intro.hidden && intro.offsetParent !== null ? 'Ready' : teacherStatus(LS.state.phase, M.state, curKind);
+  const e = $('#teacherStatus');
+  e.dataset.s = label.toLowerCase().replace(/[^a-z]+/g, '-');
+  $('#teacherStatusText').textContent = label;
+}
+// Everything the page shows about the tutor's state comes from here. No voice code touches the DOM directly.
+function render(v){
+  renderStatus();
+  const busy = v.state === 'transcribing';
+  const chip = $('#state'); chip.className = 'state ' + v.state; chip.textContent = LABEL[v.state];
+  $('#avatar').classList.toggle('speaking', v.state === 'speaking');
+  $('#caption').textContent = v.caption;
+  const mic = $('#mic');
+  mic.disabled = busy;
+  mic.classList.toggle('rec', v.state === 'recording');
+  mic.textContent = v.state === 'recording' ? '● Listening…' : '🎙 Hold to ask';
+  $('#read').disabled = busy || v.state === 'recording' || quizMode;
+  $('#askBtn').disabled = busy || v.state === 'recording';
+  mic.classList.toggle('pulse', v.state === 'waiting');
+  $('#skip').hidden = v.state !== 'waiting';
+  $('#askInput').placeholder = v.state === 'waiting' ? (voiceCfg.name ? `Answer ${voiceCfg.name}'s question…` : 'Answer the question…') : 'Ask the tutor about this lesson…';
+}
+M.subscribe(render);
+
+/* ---------- speech controller ----------
+   Starting anything cancels the previous action: its requests (AbortController), its playback, and its state. */
+let ctl = null;                       // AbortController for everything the current action started
+let audio = null;                     // the Gemini sentence now playing, if any
+let voiceCfg = { lesson_voice: 'kokoro', pronounce: [] };
+const gemCache = new Map();           // sentence -> promise of an audio URL (fetched ahead while the last one plays)
+// Kokoro, Piper and Gemini all go through the same queue below; only the browser voice is played in-page.
+const serverVoice = () => voiceCfg.lesson_voice !== 'browser';
+
+// Step times for the admin "Voice timings" panel. performance.mark is used so the browser's own clock does the timing.
+const perfName = n => 'tutor:' + n;
+function mark(n){ performance.mark(perfName(n)) }
+function gap(a, b){
+  const x = performance.getEntriesByName(perfName(a)).pop(), y = performance.getEntriesByName(perfName(b)).pop();
+  return x && y ? Math.round(y.startTime - x.startTime) : undefined;
+}
+function markOnce(n){ if(!performance.getEntriesByName(perfName(n)).length) mark(n) }
+// One id per spoken question, sent with every request so the server's steps join the page's steps.
+const newChainId = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
+function clearMarks(){ performance.getEntriesByType('mark').forEach(m => { if(m.name.startsWith('tutor:')) performance.clearMarks(m.name) }) }
+
+function stopPlayback(){
+  if(audio){ audio.pause(); audio = null }
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+function clearGemCache(){
+  gemCache.forEach(p => p.then(u => URL.revokeObjectURL(u), () => {}));
+  gemCache.clear();
+}
+// Start an action: cancel everything the previous one started, then move to idle under the new token.
+function begin(kind){
+  if(ctl) ctl.abort();
+  ctl = new AbortController();
+  stopPlayback(); clearGemCache(); clearMarks();
+  engine = lessonStep(engine, steps, { type: 'pause' }).eng;   // any new action pauses the lesson; it resumes when asked
+  const act = { token: M.begin(), signal: ctl.signal, kind, reported: false };
+  curKind = kind;
+  M.to('idle', act.token);
+  return act;
+}
+// Back to idle with a caption (navigation, errors, cancelled actions).
+function reset(caption){ const act = begin(null); M.say(caption || ''); return act }
+function done(act, caption){
+  finishTiming(act);
+  M.to('idle', act.token, caption === undefined ? {} : { caption });
+}
+function audioStarted(act){
+  if(act.signal.aborted) return;
+  if(!performance.getEntriesByName(perfName('first_audio')).length) mark('first_audio');
+  if(M.state !== 'speaking') M.to('speaking', act.token);
+}
+function finishTiming(act){
+  if(!act.kind || act.reported) return;
+  act.reported = true;
+  const f = act.kind === 'read'
+    ? { read_to_audio_ms: gap('read', 'first_audio') }
+    : { mic_to_upload_ms: gap('mic_release', 'upload_done'), upload_to_transcript_ms: gap('upload_done', 'transcript_received'),
+        transcript_to_reply_ms: gap('transcript_received', 'first_reply_text'), reply_to_audio_ms: gap('first_reply_text', 'first_audio'),
+        t_transcript: gap('mic_release', 'transcript_received'), t_reply: gap('mic_release', 'first_reply_text'),
+        t_tts_ready: gap('mic_release', 'tts_ready'), t_audio: gap('mic_release', 'first_audio') };
+  const fields = Object.fromEntries(Object.entries(f).filter(([, v]) => typeof v === 'number'));
+  if(Object.keys(fields).length) api('/api/voice/timings', { kind: act.kind, chain: act.chain, ...fields });
+}
+
+// Browser voice: one sentence at a time. Chrome can let the last sentence run on after cancel(), so wait for it to stop.
+async function speakBrowser(text, act){
+  if(!('speechSynthesis' in window)) throw new Error('no browser voice');
+  markOnce('tts_ready');
+  speechSynthesis.cancel();
+  for(let i = 0; speechSynthesis.speaking && i < 40; i++) await pause(50);
+  if(act.signal.aborted) return;
+  await new Promise(resolve => {
+    const u = new SpeechSynthesisUtterance(applyPronounce(text, voiceCfg.pronounce));
+    const voice = pickBrowserVoice(); if(voice) u.voice = voice;
+    u.onstart = () => audioStarted(act);
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
+    act.signal.addEventListener('abort', () => { speechSynthesis.cancel(); resolve() }, { once: true });
+    speechSynthesis.speak(u);
+  });
+}
+// Browser fallback: prefer an installed "Natural" English voice (Edge on Windows), then any English voice.
+function pickBrowserVoice(){
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v => /natural/i.test(v.name) && /^en/i.test(v.lang))
+      || vs.find(v => /^en[-_](US|GB)/i.test(v.lang)) || null;
+}
+// Local and Gemini voices: one request per sentence. The next sentence is fetched while the current one plays.
+function fetchVoice(text, act){
+  const path = voiceCfg.lesson_voice === 'gemini' ? '/api/voice/speak' : '/api/voice/tts';
+  return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...hdr() },
+      body: JSON.stringify({ date: day(), text, kind: act.kind === 'read' ? 'read' : 'answer', chain: act.chain }), signal: act.signal })
+    .then(r => { if(!r.ok) throw new Error('speech ' + r.status); return r.blob() })
+    .then(b => { markOnce('tts_ready'); return URL.createObjectURL(b) });
+}
+function prefetch(text, act){
+  if(!text || gemCache.has(text)) return;
+  const p = fetchVoice(text, act);
+  p.catch(() => {});                  // a failed prefetch is handled when its turn comes
+  gemCache.set(text, p);
+}
+function playUrl(url, act){
+  return new Promise(resolve => {
+    const a = new Audio(url); audio = a;
+    const end = () => { if(audio === a) audio = null; URL.revokeObjectURL(url); resolve() };
+    a.onplaying = () => audioStarted(act);
+    a.onended = end;
+    a.onerror = end;
+    act.signal.addEventListener('abort', () => { a.pause(); end() }, { once: true });
+    a.play().catch(end);
+  });
+}
+async function speakServer(text, act, nextText){
+  const url = await (gemCache.get(text) || fetchVoice(text, act));
+  gemCache.delete(text);
+  if(act.signal.aborted){ URL.revokeObjectURL(url); return }
+  prefetch(nextText, act);
+  await playUrl(url, act);
+}
+// Speaks sentences in order. Sentences can keep arriving while it plays (a streamed answer).
+function makeSpeaker(act, opts = {}){
+  const q = [];
+  let closed = false, running = false, wake = null;
+  let finish; const drained = new Promise(r => finish = r);
+  const poke = () => { const w = wake; wake = null; if(w) w() };
+  act.signal.addEventListener('abort', poke, { once: true });
+  async function run(){
+    running = true;
+    while(!act.signal.aborted){
+      if(!q.length){ if(closed) break; await new Promise(r => wake = r); continue }
+      const text = q.shift();
+      try{
+        if(serverVoice()) await speakServer(text, act, q[0]);
+        else await speakBrowser(text, act);
+      } catch(e){
+        if(act.signal.aborted) break;
+        // The cloud voice failed for this sentence; the browser's own voice is free and needs no server.
+        await speakBrowser(text, act).catch(() => M.say('Spoken voice is not available in this browser.'));
+      }
+    }
+    running = false;
+    finish();
+    if(!act.signal.aborted && closed && !q.length && !opts.quiet) done(act);
+  }
+  return {
+    push(text){ splitForSpeech(text).filter(p => /[A-Za-z0-9]/.test(p)).forEach(p => q.push(p)); poke(); if(!running) run() },
+    end(){ closed = true; poke(); if(!running) run() },
+    drained,
+  };
+}
+
+/* ---------- the lesson runs on the speech controller ----------
+   The lesson engine (above) decides each step. The functions here carry out its effects: they speak through the
+   speech queue, wait for the student, ask the server to judge an answer, mark exam answers, and send back what
+   happened. Only events from the current lesson action move the engine, so a stopped or replaced action is ignored.
+   Each effect also tells the page what to show (lsApply), so the screen draws from state, never from this code. */
+const WAIT_MS = 25000;                // a gentle nudge after this long with no answer; then it keeps waiting
+// A question is waiting for the student's answer: one from today's lesson file, or one the mock engine asked.
+let engineWait = null;                // { id, act } while a mock-engine question waits
+const waitingAct = () => (lessonAct && lessonAct.waitQ ? lessonAct : (engineWait ? engineWait.act : null));
+function answerWaiting(text){
+  if(lessonAct && lessonAct.waitQ) return studentAnswered(lessonAct, text);
+  if(engineWait) return engineAnswer(text, engineWait.act);
+}
+function speakLines(act, texts, opts){ const sp = makeSpeaker(act, opts); texts.forEach(t => sp.push(t)); sp.end(); return sp.drained }
+function lessonDispatch(act, ev){
+  if(act !== lessonAct || act.signal.aborted) return;   // stale: a newer action owns the lesson now
+  const r = lessonStep(engine, steps, ev);
+  engine = r.eng;
+  r.effects.forEach(f => runEffect(act, f));
+}
+function runEffect(act, f){
+  if(f.do === 'show') showSlideAt(f.slide);
+  else if(f.do === 'exam') showExam(f.i, act);
+  else if(f.do === 'speak') speakStep(act, f);
+  else if(f.do === 'wait') waitStep(act, f);
+  else if(f.do === 'evaluate') evaluateStep(act, f);
+  else if(f.do === 'mark') markStep(act, f);
+  else if(f.do === 'complete') finishLesson(act);
+}
+// Start the lesson at a step: from a slide, Read, Next, or the stepper. Speech still going stops first (begin does that).
+function startAt(i){
+  const act = begin('read');
+  mark('read');
+  lessonAct = act;
+  lessonDispatch(act, { type: 'start', i });
+}
+const stepId = s => s.slide + ':' + s.qi;
+// What the page shows while the engine speaks a step.
+function showPhase(f){
+  const s = steps[engine.i], pct = legacyPct();
+  if(!s) return;
+  if(engine.state === 'TEACHING') lsApply({ type: 'teaching', progress: { pct } });
+  else if(engine.state === 'ASKING' || engine.state === 'REMEDIATING') lsApply({ type: 'question', id: stepId(s), text: s.text, progress: { pct } });
+}
+function speakStep(act, f){
+  showPhase(f);
+  M.say(f.text);
+  speakLines(act, [f.text], { quiet: true }).then(async () => {
+    // The right and wrong marking stays up until the student is ready: Continue (or the next exam question) carries on.
+    if(act.awaitContinue && !act.continued) await new Promise(res => { act.continueGo = res });
+    act.awaitContinue = false; act.continued = false; act.continueGo = null;
+    lessonDispatch(act, { type: 'spoken', seq: f.seq });
+  });
+}
+function waitStep(act, f){
+  act.waitQ = { seq: f.seq, text: f.text };
+  const s = steps[engine.i];
+  if(s && s.kind === 'check') lsApply({ type: 'waiting_for_student', id: stepId(s) });
+  M.to('waiting', act.token, { caption: f.text });
+  act.nudgeTimer = setTimeout(() => nudge(act), WAIT_MS);
+  if(act.early){ const t = act.early; act.early = null; studentAnswered(act, t) }   // chosen on the card while the question was still being read
+}
+function nudge(act){
+  act.nudgeTimer = null;
+  if(!act.waitQ || act.signal.aborted) return;
+  speakLines(act, ['Take your time. A rough answer is fine.'], { quiet: true }).then(() => {
+    if(act.waitQ && !act.signal.aborted) M.to('waiting', act.token, { caption: act.waitQ.text });
+  });
+}
+// A typed, spoken or clicked answer to the question that is waiting. False if nothing is waiting.
+function studentAnswered(act, text){
+  const w = act.waitQ;
+  if(!w) return false;
+  act.waitQ = null; clearTimeout(act.nudgeTimer);
+  bubble('user', text); $('#askInput').value = '';
+  lessonDispatch(act, { type: 'answer', text, seq: w.seq });
+  return true;
+}
+// A check-in question: the server judges the answer and streams the reply. The verdict comes first, so the page
+// knows whether the lesson re-asks; the reply is spoken as it arrives.
+async function evaluateStep(act, f){
+  const qid = stepId({ slide: f.slide, qi: f.qi });
+  lsApply({ type: 'student_answer_received', id: qid, text: f.answer });
+  lsApply({ type: 'evaluating', id: qid });
+  M.to('thinking', act.token, { caption: 'Thinking…' });
+  const sp = makeSpeaker(act, { quiet: true });
+  let reply = '';
+  try{
+    const res = await fetch('/api/checkin', { method: 'POST', headers: { 'Content-Type': 'application/json', ...hdr() },
+      body: JSON.stringify({ date: day(), slide: f.slide, question_index: f.qi, answer: f.answer, chain: act.chain }), signal: act.signal });
+    if(!res.ok){ let d = {}; try{ d = await res.json() } catch(e){} throw new Error(d.error || 'Could not check that.') }
+    await readEvents(res, ev => {
+      if(act.signal.aborted) return;
+      if(ev.type === 'verdict') lessonDispatch(act, { type: 'verdict', verdict: ev.verdict, seq: f.seq });
+      else if(ev.type === 'delta'){ reply += ev.text; M.say(reply); lsApply({ type: 'remediating', id: qid, text: reply }) }
+      else if(ev.type === 'sentence') sp.push(ev.text);
+      else if(ev.type === 'done') reply = ev.reply || reply;
+    });
+  } catch(err){
+    if(act.signal.aborted) return;
+    reply = err.message || 'Could not check that.';
+    lsApply({ type: 'remediating', id: qid, text: reply });
+    sp.push(reply);
+  }
+  if(act.signal.aborted) return;
+  bubble('assistant', reply);
+  sp.end();
+  await sp.drained;
+  if(act.signal.aborted) return;
+  lessonDispatch(act, { type: 'spoken', seq: f.seq });
+}
+// An exam answer: the server marks it, the card shows right or wrong, and the feedback is spoken.
+async function markStep(act, f){
+  M.to('thinking', act.token, { caption: 'Marking…' });
+  const it = steps[engine.i], k = it && it.options ? it.options.indexOf(f.answer) : -1;
+  if(k >= 0) lsApply({ type: 'ui_select', key: LETTERS[k] });      // an answer given by voice or the box shows on the card too
+  lsApply({ type: 'ui_submitted' });
+  const r = await api('/api/answer', { date: day(), id: f.id, answer: f.answer });
+  if(act.signal.aborted) return;
+  let feedback;
+  if(r.ok){
+    feedback = str(r.data.feedback);
+    lsApply({ type: 'answer_result', id: String(f.id), selected: k >= 0 ? LETTERS[k] : undefined, correct: !!r.data.correct,
+      explanation: feedback.replace(/^(?:Correct|Not quite)\.\s*/, ''), requires_continue: !r.data.correct });
+    act.awaitContinue = !r.data.correct;   // a right answer carries on by itself; a wrong one waits for Continue so the reason can be read
+  } else {
+    feedback = r.data.error || 'Could not check that answer.';
+    lsApply({ type: 'ui_unsubmit' });
+  }
+  lessonDispatch(act, { type: 'marked', seq: f.seq, feedback });
+}
+function showExam(i, act){
+  const it = steps[i], exams = steps.filter(s => s.kind === 'exam');
+  quizMode = true; shownSlide = -1; timerActive = false;
+  $('#next').disabled = $('#prev').disabled = true;
+  $('#stageLabel').textContent = 'Exam';
+  $('#nudge').classList.remove('show'); $('#timer').style.visibility = 'hidden';
+  if(LS.state.section.index !== stages.length) lsApply({ type: 'section_started', index: stages.length, name: 'Quiz', minutes: 0 });
+  lsApply({ type: 'exam_question', id: it.id, objective: it.objective, kind: it.type, number: exams.indexOf(it) + 1, total: exams.length,
+    stem: it.text, options: it.options, progress: { pct: legacyPct() } });
+  markStepper();
+}
+function finishLesson(act){
+  quizMode = false; timerActive = false; shownSlide = -1;
+  $('#next').disabled = $('#prev').disabled = true; $('#stageLabel').textContent = 'Finish';
+  $('#nudge').classList.remove('show'); $('#timer').style.visibility = 'hidden';
+  lsApply({ type: 'lesson_completed' });
+  done(act);
+}
+function readSlide(){
+  if(driver.mode !== 'legacy') return engineReplay();
+  if(quizMode || !steps.length) return;
+  const j = firstStepOf(steps, idx);
+  if(j >= 0) startAt(j);
+}
+$('#read').onclick = readSlide;
+// Stop: cancels the running request and playback, drops the queue, and pauses the lesson at this step.
+$('#stop').onclick = () => {
+  if(driver.mode !== 'legacy') engineHalt();      // the engine is told to hold as well, so nothing new starts
+  reset(M.view().caption);
+  // A question that was waiting is dropped by Stop; take the "Your turn" panel off the screen with it.
+  if(driver.mode === 'legacy' && ['asking', 'waiting', 'answered', 'evaluating', 'remediating'].includes(LS.state.phase)) lsApply({ type: 'teaching' });
+};
+// Skip: leaves the question unanswered and carries on.
+$('#skip').onclick = () => {
+  const act = waitingAct();
+  if(!act) return;
+  if(act === lessonAct){ clearTimeout(act.nudgeTimer); act.waitQ = null; lessonDispatch(act, { type: 'skip' }); return }
+  if(engineWait){ const w = engineWait; engineWait = null; sendAction({ type: 'skip', id: w.id }); reset('') }
+};
+
+/* ---------- ask the tutor (streamed answer) ---------- */
+async function readEvents(res, onEvent){
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = '';
+  for(;;){
+    const { value, done: finished } = await reader.read();
+    if(finished) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while((i = buf.indexOf('\n\n')) >= 0){
+      const block = buf.slice(0, i); buf = buf.slice(i + 2);
+      const line = block.split('\n').find(l => l.startsWith('data: '));
+      if(line){ try{ onEvent(JSON.parse(line.slice(6))) } catch(e){} }
+    }
+  }
+}
+// One path for typed and spoken questions. The current slide is passed as context, marked as lesson text.
+// Spoken answers are read sentence by sentence as they arrive; typed answers stay on screen.
+async function ask(q, act, spoken){
+  M.to('thinking', act.token, { caption: 'Thinking…' });
+  bubble('user', q); $('#askInput').value = '';
+  const s = slides[idx];
+  const context = s && !quizMode ? `(The student is on the slide "${s.title}" in ${stages[s.stage].name}.) ` : '';
+  const speaker = spoken ? makeSpeaker(act) : null;
+  let reply = '', first = true;
+  try{
+    const res = await fetch('/api/chat/stream', { method: 'POST', headers: { 'Content-Type': 'application/json', ...hdr() },
+      body: JSON.stringify({ date: day(), message: context + q, chain: act.chain }), signal: act.signal });
+    if(!res.ok){ let d = {}; try{ d = await res.json() } catch(e){} throw new Error(d.error || 'Could not reach the tutor.') }
+    await readEvents(res, ev => {
+      if(act.signal.aborted) return;
+      if(ev.type === 'delta'){
+        if(first){ first = false; mark('first_reply_text') }
+        reply += ev.text; M.say(reply);
+      } else if(ev.type === 'sentence' && speaker) speaker.push(ev.text);
+      else if(ev.type === 'done') reply = ev.reply || reply;
+    });
+  } catch(err){
+    if(act.signal.aborted) return;          // a newer action has started; this answer is stale
+    reply = err.message || 'Could not reach the tutor.';
+  }
+  if(act.signal.aborted) return;
+  bubble('assistant', reply);
+  if(speaker){ M.say(reply); speaker.end() }
+  else done(act, reply);
+}
+
+/* ---------- hold to ask: one microphone stream for the lesson ---------- */
+let rec = null, micStream = null, micHeld = false, recStart = 0, chunks = [];
+async function ensureMic(){
+  if(micStream && micStream.getAudioTracks().some(t => t.readyState === 'live')) return micStream;
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  return micStream;
+}
+async function startAsk(e){
+  if(e) e.preventDefault();
+  if(rec || micHeld) return;
+  if(!navigator.mediaDevices || !window.MediaRecorder){
+    reset('This browser cannot record audio. Type your question in the box instead.'); return;
+  }
+  micHeld = true;
+  if(!waitingAct()) holdForQuestion();
+  const act = waitingAct() ? (stopPlayback(), waitingAct()) : begin('ask'); act.chain = act.chain || newChainId();   // any answer or speech still going stops here; the chain id ties this question's steps together
+  let stream;
+  try{ stream = await ensureMic() }
+  catch(err){
+    micHeld = false;
+    $('#micAllow').hidden = false;
+    M.say(micMessage(err));
+    return;
+  }
+  if(!micHeld || act.signal.aborted) return;   // let go, or a newer action started, while the microphone opened
+  const r = new MediaRecorder(stream);
+  chunks = [];
+  r.ondataavailable = ev => { if(ev.data && ev.data.size) chunks.push(ev.data) };
+  r.onstop = () => {
+    rec = null;
+    sendRecording(new Blob(chunks, { type: r.mimeType || 'audio/webm' }), act, performance.now() - recStart);
+  };
+  rec = r; recStart = performance.now();
+  r.start();
+  M.to('recording', act.token, { caption: 'Listening… let go to send your question.' });
+}
+function stopAsk(){
+  micHeld = false;
+  if(rec && rec.state === 'recording'){ mark('mic_release'); rec.stop() }
+}
+// The recording goes up as raw bytes; progress marks come from the upload's own events.
+function upload(blob, ms, act){
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/voice/transcribe?date=' + day() + '&ms=' + Math.round(ms) + '&chain=' + act.chain);
+    x.setRequestHeader('Content-Type', 'application/octet-stream');
+    x.setRequestHeader('X-Audio-Mime', blob.type || 'audio/webm');
+    const h = hdr(); if(h.Authorization) x.setRequestHeader('Authorization', h.Authorization);
+    x.upload.onload = () => mark('upload_done');
+    x.onload = () => {
+      let d = {}; try{ d = JSON.parse(x.responseText) } catch(e){}
+      if(x.status === 200) resolve(d.text || '');
+      else reject(new Error(d.error || 'Could not hear that. Try again, or type it.'));
+    };
+    x.onerror = () => reject(new Error('Cannot reach the tutor. Is Docker running?'));
+    act.signal.addEventListener('abort', () => { x.abort(); reject(new Error('cancelled')) }, { once: true });
+    x.send(blob);
+  });
+}
+// A failed or empty answer while a question waits: say so and ask again, so the lesson is never left stuck.
+function waitAgain(act, msg){
+  const caption = act.waitQ ? act.waitQ.text : (engineWait && engineWait.act === act && LS.state.question ? LS.state.question.text : null);
+  if(caption == null) return done(act, msg);
+  bubble('assistant', msg);
+  M.to('waiting', act.token, { caption });
+}
+async function sendRecording(blob, act, ms){
+  if(act.signal.aborted) return;
+  if(blob.size < 1000) return waitAgain(act, 'That was too short. Hold the button while you ask.');
+  M.to('transcribing', act.token, { caption: 'Writing that down…' });
+  let text;
+  try{ text = await upload(blob, ms, act) }
+  catch(err){
+    if(act.signal.aborted) return;
+    waitAgain(act, err.message);
+    return;
+  }
+  if(act.signal.aborted) return;
+  text = (text || '').trim();
+  mark('transcript_received');
+  if(!text) return waitAgain(act, 'I could not hear a question there. Try again, or type it.');
+  if(studentAnswered(act, text)) return;
+  if(engineWait && engineWait.act === act) return engineAnswer(text, act);
+  ask(text, act, true);
+}
+const MIC_BLOCKED = 'The browser has blocked the microphone for this page. Click the lock icon in the address bar, set Microphone to Allow, then reload.';
+function micMessage(err){
+  if(!err) return '';
+  if(err.name === 'NotAllowedError' || err.name === 'SecurityError') return MIC_BLOCKED;
+  if(err.name === 'NotFoundError') return 'No microphone was found. Check that one is plugged in and enabled in Windows Sound settings.';
+  if(err.name === 'NotReadableError') return 'The microphone is in use by another app. Close it and try again.';
+  return 'The microphone could not be opened. Try again, or type your question.';
+}
+/* Browsers only show their microphone prompt in answer to a click, so this button asks;
+   if the browser has already blocked the site, the only fix is in its site settings. */
+async function requestMic(){
+  if(!navigator.mediaDevices){ reset('This browser cannot use the microphone. Type your question instead.'); return false }
+  try{
+    await ensureMic();
+    $('#micAllow').hidden = true;
+    reset('Microphone allowed. Hold the mic button to ask a question.');
+    return true;
+  } catch(err){
+    reset(micMessage(err));
+    return false;
+  }
+}
+$('#micAllow').onclick = requestMic;
+async function checkMic(){
+  try{
+    const p = await navigator.permissions.query({ name: 'microphone' });
+    const show = () => { $('#micAllow').hidden = p.state === 'granted' };
+    show(); p.onchange = show;
+  } catch(e){ $('#micAllow').hidden = false }   // some browsers can't query; let the button ask
+}
+checkMic();
+$('#mic').onpointerdown = startAsk;
+$('#mic').onpointerup = stopAsk;
+$('#mic').onpointerleave = stopAsk;
+$('#mic').onpointercancel = stopAsk;
+async function loadChat(){
+  $('#chatlog').replaceChildren();
+  const r = await api('/api/chat/history?date=' + day());
+  if(r.ok) r.data.messages.forEach(m => bubble(m.role, m.content));
+}
+$('#chatPanel').addEventListener('toggle', function(){ if(this.open) loadChat() });
+
+/* ---------- lesson view: state in, DOM out ----------
+   Everything below draws LS.state. Text from the model or the student is only ever written with textContent,
+   and diagrams only as <img> data URIs, as before. */
+const shown = { teaching: null, section: -2, examId: null, completed: false };
+const courseName = s => s.course || (document.title || '').replace(/\s*Classroom\s*$/i, '').trim();
+const fine = window.matchMedia ? window.matchMedia('(pointer: fine)') : { matches: true };
+
+function renderHead(s){
+  const course = courseName(s), no = s.number != null ? 'Lesson ' + s.number : s.label;
+  $('#lhCourse').textContent = course;
+  $('#lhNo').textContent = no ? ' · ' + no : '';
+  $('#lhPractice').hidden = !s.practice;
+  $('#lhTitle').textContent = s.title || 'Loading lesson…';
+  $('#introTitle').textContent = s.title || "Today's lesson";
+  if(s.started) $('#lessonTitle').textContent = [course, no].filter(Boolean).join(' · ');
+  const chip = $('#lhSection'), i = s.section.index;
+  chip.hidden = i < 0;
+  if(i >= 0) chip.textContent = 'Section ' + (i + 1) + (i < s.sections.length ? ' of ' + s.sections.length : '') + (s.section.name ? ' · ' + s.section.name : '');
+  const o = $('#lhObjective'), objs = s.objective ? [s.objective] : s.objectives;   // the one being taught, else all of the lesson's
+  o.hidden = !objs.length;
+  if(objs.length){
+    o.textContent = objs.length === 1 ? 'Objective ' + objs[0].id + (objs[0].title ? ' · ' + objs[0].title : '') : 'Objectives ' + objs.map(x => x.id).join(', ');
+    o.title = objs.map(x => x.id + (x.title ? ' · ' + x.title : '')).join('\n');
+  }
+  const pct = s.progress.pct, name = s.section.name || 'Progress';
+  $('#lhPName').textContent = name; $('#lhPct').textContent = pct + '%';
+  const m = $('#meter');
+  m.setAttribute('aria-valuenow', pct); m.setAttribute('aria-valuetext', name + ', ' + pct + ' percent');
+  $('#meterFill').style.width = pct + '%';
+  $('#lhCurrent').hidden = !s.current; $('#lhCurrentName').textContent = s.current;
+}
+// The section strip. Today's lesson file builds its own (clickable) one; for an engine it is drawn from the state.
+function renderSections(s){
+  if(s.manual) return;
+  const st = $('#stepper'), sig = s.sections.map(x => x.id + '|' + x.name + '|' + x.minutes).join(';');
+  if(st.dataset.sig !== sig){
+    st.dataset.sig = sig; st.replaceChildren();
+    s.sections.forEach(x => { const d = el('div', null, 'step'); d.append(el('b', x.name), document.createTextNode(x.minutes ? x.minutes + ' min' : '')); st.append(d) });
+  }
+  [...st.children].forEach((d, i) => {
+    d.classList.toggle('active', i === s.section.index); d.classList.toggle('done', i < s.section.index);
+    if(i === s.section.index) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
+  });
+  $('#stageLabel').textContent = s.section.index >= 0 ? 'Section ' + (s.section.index + 1) + ' of ' + s.sections.length + (s.section.name ? ' · ' + s.section.name : '') : 'Lesson';
+}
+function blockEl(b){
+  const labelled = (cls, label) => { const d = el('div', null, 'blk ' + cls); d.append(el('span', label, 'blk-label')); return d };
+  switch(b.type){
+    case 'heading': return el('h3', str(b.text), 'blk blk-heading');
+    case 'text': { const p = el('p', null, 'blk blk-text'); inline(p, str(b.text)); return p }
+    case 'list': { const ul = el('ul', null, 'blk blk-list'); (Array.isArray(b.items) ? b.items : []).forEach(t => { const li = el('li'); inline(li, str(t)); ul.append(li) }); return ul }
+    case 'definition': { const d = labelled('blk-def', 'Key definition'); if(b.term) d.append(el('span', str(b.term), 'term')); const p = el('p'); inline(p, str(b.text)); d.append(p); return d }
+    case 'example': { const d = labelled('blk-example', 'Example'); const p = el('p'); inline(p, str(b.text)); d.append(p); return d }
+    case 'exam_tip': { const d = labelled('blk-tip', 'Exam tip'); const p = el('p'); inline(p, str(b.text)); d.append(p); return d }
+    case 'terms': {
+      const d = el('div', null, 'blk'); d.append(el('span', 'Important terms', 'blk-label'));
+      const row = el('div', null, 'blk-terms');
+      (Array.isArray(b.items) ? b.items : []).forEach(t => { const c = el('div', null, 'tchip'); c.append(el('b', str(t && t.term != null ? t.term : t))); if(t && t.text) c.append(el('span', str(t.text))); row.append(c) });
+      d.append(row); return d;
+    }
+    case 'diagram': {
+      const img = el('img', null, 'blk-diagram'); img.alt = str(b.alt) || 'Diagram';
+      img.src = b.svg != null ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str(b.svg)) : '';
+      return img;
+    }
+  }
+  return el('span');
+}
+function renderTeaching(box, s){
+  box.replaceChildren();
+  if(s.section.index >= 0) box.append(el('div', 'Section ' + (s.section.index + 1) + (s.section.name ? ' · ' + s.section.name : ''), 'kicker'));
+  if(s.teaching.title) box.append(el('h2', s.teaching.title));
+  s.teaching.blocks.forEach(b => box.append(blockEl(b)));
+  box.scrollTop = 0;
+}
+const TURN_BADGE = { asking: 'Question', waiting: 'Your turn', answered: 'Your answer', evaluating: 'Checking', remediating: "Let's go over it" };
+const TURN_SUB = { asking: 'The tutor is asking you something', waiting: 'The tutor is waiting for you', answered: 'Got it', evaluating: 'One moment', remediating: 'Listen, then carry on' };
+function renderTurn(s){
+  const t = $('#turn'), on = !!TURN_BADGE[s.phase];
+  t.hidden = !on;
+  if(!on) return;
+  t.dataset.phase = s.phase;
+  $('#turnBadge').textContent = TURN_BADGE[s.phase]; $('#turnSub').textContent = TURN_SUB[s.phase];
+  $('#turnQ').textContent = s.question ? s.question.text : '';
+  const a = $('#turnA'), showA = !!s.answer && s.phase !== 'asking' && s.phase !== 'waiting';
+  a.hidden = !showA; if(showA) a.replaceChildren(el('b', 'You said: '), document.createTextNode(s.answer));
+  const n = $('#turnNote'); n.hidden = !(s.phase === 'remediating' && s.note); n.textContent = s.phase === 'remediating' ? s.note : '';
+  $('#turnHint').textContent = s.phase === 'waiting' ? 'Waiting for your answer. Hold 🎙 to speak, or type it below. A rough answer is fine.' : '';
+}
+
+// The exam question: built once per question, then only its state (chosen, locked, result) is synced.
+function buildExam(box, x){
+  box.replaceChildren();
+  const root = el('div', null, 'exam'); root.dataset.id = x.id; root.setAttribute('role', 'group'); root.setAttribute('aria-labelledby', 'examStem');
+  const banner = el('div', null, 'exam-banner');
+  banner.append(el('b', 'Exam question'), el('span', [x.number && x.total ? 'Question ' + x.number + ' of ' + x.total : '', x.objective ? 'Objective ' + x.objective : '', x.label].filter(Boolean).join(' · ')));
+  const body = el('div', null, 'exam-body');
+  const stem = el('p', x.stem, 'exam-stem'); stem.id = 'examStem';
+  body.append(stem);
+  if(x.kind === 'choice'){
+    const fs = el('fieldset', null, 'exam-options'); fs.append(el('legend', 'Choose one answer', 'sr-only'));
+    x.options.forEach(o => {
+      const lab = el('label', null, 'opt'); lab.dataset.key = o.key;
+      const r = document.createElement('input'); r.type = 'radio'; r.name = 'exam-answer'; r.value = o.key;
+      const text = el('span', null, 'otext'); text.append(document.createTextNode(o.text), el('span', '', 'tagline'));
+      lab.append(r, el('span', o.key, 'key'), text); fs.append(lab);
+    });
+    fs.addEventListener('change', e => { if(e.target.matches('input')) lsApply({ type: 'ui_select', key: e.target.value }) });
+    body.append(fs);
+  } else {
+    const t = document.createElement('input'); t.type = 'text'; t.className = 'exam-text'; t.id = 'examText'; t.maxLength = 1000;
+    t.placeholder = 'Type your answer'; t.setAttribute('aria-labelledby', 'examStem');
+    t.addEventListener('input', () => syncExam($('#board'), LS.state.exam));
+    t.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitExam() } });
+    body.append(t);
+  }
+  const actions = el('div', null, 'exam-actions');
+  const submit = el('button', 'Submit answer', 'btn primary'); submit.id = 'examSubmit'; submit.disabled = true; submit.onclick = submitExam;
+  actions.append(submit, el('span', x.kind === 'choice' ? 'Press A to D to choose, Enter to submit.' : 'Type your answer, then press Enter.', 'exam-hint'));
+  const res = el('div', null, 'exam-result'); res.id = 'examResult'; res.hidden = true;
+  const cont = el('button', 'Continue', 'btn primary'); cont.id = 'examContinue';
+  cont.onclick = () => { cont.disabled = true; sendAction({ type: 'continue', id: x.id }) };
+  res.append(el('b', '', 'verdict'), el('p'), cont);
+  const live = el('div', null, 'sr-only'); live.id = 'examLive'; live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'assertive');
+  body.append(actions, res, live);
+  root.append(banner, body); box.append(root);
+}
+function syncExam(box, x){
+  if(!x) return;
+  if(shown.examId !== x.id){ buildExam(box, x); shown.examId = x.id; focusExam() }
+  const root = box.querySelector('.exam'); if(!root) return;
+  const r = x.result, locked = x.submitted || !!r;
+  root.classList.toggle('locked', locked);
+  const submit = root.querySelector('#examSubmit');
+  let ready;
+  if(x.kind === 'choice'){
+    ready = !!x.selected;
+    root.querySelectorAll('.opt').forEach(lab => {
+      const k = lab.dataset.key, inp = lab.querySelector('input'), isSel = x.selected === k;
+      inp.checked = isSel; inp.disabled = locked;
+      let cls = '', tag = '';
+      if(r){
+        const isKey = r.correctKey ? r.correctKey === k : (r.correct && isSel);
+        if(isKey){ cls = 'right'; tag = isSel ? '✓ Your answer · correct' : '✓ Correct answer' }
+        else if(isSel){ cls = 'wrong'; tag = '✗ Your answer' }
+      }
+      lab.classList.toggle('sel', isSel && !r); lab.classList.toggle('right', cls === 'right'); lab.classList.toggle('wrong', cls === 'wrong');
+      lab.querySelector('.tagline').textContent = tag;
+    });
+  } else {
+    const t = root.querySelector('#examText'); t.disabled = locked; ready = !!t.value.trim();
+  }
+  submit.disabled = locked || !ready;
+  submit.textContent = x.submitted && !r ? 'Checking…' : 'Submit answer';
+  const res = root.querySelector('#examResult');
+  if(r){
+    const fresh = res.hidden;
+    res.hidden = false; res.className = 'exam-result ' + (r.correct ? 'ok' : 'bad');
+    const verdict = r.correct ? '✓ Correct' : '✗ Not quite';
+    res.querySelector('.verdict').textContent = verdict; res.querySelector('p').textContent = r.explanation;
+    const cont = res.querySelector('#examContinue'); cont.hidden = !r.requiresContinue;
+    root.querySelector('#examLive').textContent = verdict + '. ' + r.explanation;
+    if(fresh && r.requiresContinue) cont.focus();
+  } else res.hidden = true;
+}
+function submitExam(){
+  const x = LS.state.exam;
+  if(!x || x.submitted || x.result) return;
+  let key = null, text = '';
+  if(x.kind === 'choice'){ if(!x.selected) return; key = x.selected; text = (x.options.find(o => o.key === key) || {}).text || '' }
+  else { text = ($('#examText').value || '').trim(); if(!text) return }
+  lsApply({ type: 'ui_submitted' });
+  sendAction({ type: 'exam_answer', id: x.id, key, text });
+}
+function focusExam(){
+  requestAnimationFrame(() => {
+    const t = document.querySelector('#board .exam-text') || document.querySelector('#board .opt input');
+    const a = document.activeElement;
+    if(t && (!a || a === document.body || a.closest('.controls'))) t.focus();
+  });
+}
+// Keys for the exam card: A to D (or 1 to 4) choose, Enter submits, and Enter carries on after the result.
+document.addEventListener('keydown', e => {
+  const s = LS.state, x = s.exam;
+  if(!x || (s.phase !== 'exam' && s.phase !== 'reviewing') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.target.matches('textarea, input:not([type=radio]):not([type=checkbox])')) return;
+  const onButton = e.target.matches('button');
+  if(x.result){ if(e.key === 'Enter' && x.result.requiresContinue && !onButton){ e.preventDefault(); $('#examContinue').click() } return }
+  if(x.submitted || x.kind !== 'choice') return;
+  const up = e.key.length === 1 ? e.key.toUpperCase() : '';
+  const n = '12345678'.indexOf(e.key);
+  const key = x.options.some(o => o.key === up) ? up : (n >= 0 && x.options[n] ? x.options[n].key : null);
+  if(key){
+    e.preventDefault(); lsApply({ type: 'ui_select', key });
+    const inp = document.querySelector('.opt[data-key="' + key + '"] input'); if(inp) inp.focus();
+    return;
+  }
+  if(e.key === 'Enter' && x.selected && !onButton){ e.preventDefault(); submitExam() }
+});
+
+function renderCompleted(box){
+  box.replaceChildren();
+  const card = el('div', null, 'done-card');
+  card.append(el('div', 'Lesson complete', 'kicker'), el('h2', 'Well done'), el('p', "Save one line about today so tomorrow's lesson can build on it."));
+  const sum = el('div', null, 'qcard');
+  const input = document.createElement('input'); input.type = 'text'; input.id = 'sum'; input.size = 50; input.maxLength = 2000;
+  input.placeholder = 'One line: what did you learn, what was hard?'; input.setAttribute('aria-label', 'Summary of the lesson');
+  const save = el('button', 'Save summary', 'btn'), msg = el('span', null, 'tag');
+  save.onclick = async () => {
+    const r = await sendAction({ type: 'finish_summary', summary: input.value });
+    msg.textContent = r && r.ok ? " Saved. Tomorrow's lesson will use this." : ' Could not save.';
+  };
+  sum.append(el('b', 'Finish lesson'), el('br'), input, document.createTextNode(' '), save, msg);
+  const prog = el('div', null, 'qcard'); prog.id = 'progress';
+  card.append(sum, prog); box.append(card);
+  loadProgress();
+}
+function renderBoard(s){
+  const box = $('#board');
+  if(s.phase === 'exam' || s.phase === 'reviewing'){ shown.teaching = null; shown.completed = false; syncExam(box, s.exam); return }
+  shown.examId = null;
+  if(s.phase === 'completed'){ if(!shown.completed){ shown.completed = true; shown.teaching = null; renderCompleted(box) } return }
+  shown.completed = false;
+  if(shown.teaching !== s.teaching || shown.section !== s.section.index){ shown.teaching = s.teaching; shown.section = s.section.index; renderTeaching(box, s) }
+}
+function renderLesson(s){
+  renderHead(s); renderSections(s); renderBoard(s); renderTurn(s); renderStatus();
+  $('#manualNav').hidden = !s.manual;
+  $('#introText').textContent = s.manual ? "The lesson moves on by itself. Hold the mic to ask anything, or use Next to skip ahead."
+    : "The lesson runs by itself. Listen, answer when it's your turn, and hold the mic or type to ask anything.";
+}
+LS.subscribe(renderLesson);
+
+/* ---------- engines: who decides what comes next ----------
+   The page only reacts to events and reports what the student did. An engine is anything with send(action):
+   today's lesson files (legacyDriver, below), the mock (createMockEngine, for building the page without a backend),
+   and later the backend. Student actions go out through sendAction; events come in through dispatch.
+   Actions: begin, student_answer, skip, exam_answer, continue, speech_done, stop, resume, finish_summary.
+   (docs/CLASSROOM-EVENTS.md has the fields.) */
+let driver = { mode: 'legacy', send(){} };
+const sent = [];                                  // every action sent, newest last (the browser checks read this)
+function sendAction(a){ sent.push(a); try { return driver.send(a) } catch(e){ return undefined } }
+function useDriver(d){ driver = d; lsApply({ type: 'ui_mode', manual: d.mode === 'legacy' }) }
+
+// Events are handled one at a time, in order. An event that speaks holds the queue until the speech is over,
+// so a question is finished before "waiting for you" appears. Stop and Pause hold the queue until Resume.
+const evq = []; let pumping = false, halted = false, interrupted = null, lastSpoken = null;
+function dispatch(ev){ evq.push(ev); pump() }
+async function pump(){
+  if(pumping) return;
+  pumping = true;
+  try{ while(evq.length && !halted) await handleEvent(evq.shift()) }
+  finally{ pumping = false }
+}
+async function handleEvent(ev){
+  lsApply(ev);
+  const lines = spokenLines(ev);
+  switch(ev.type){
+    case 'lesson_started': $('#intro').hidden = false; break;
+    case 'section_started': resetTimer(LS.state.section.minutes, NUDGE_ENGINE); settle(); break;
+    case 'teaching': case 'exam_question': case 'answer_result': settle(); break;
+    case 'remediating': if(!lines.length) settle(); break;
+    case 'lesson_completed': timerActive = false; $('#timer').style.visibility = 'hidden'; settle(); break;
+    case 'waiting_for_student': enterEngineWait(ev); break;
+  }
+  if(lines.length) await speakEvent(ev, lines);
+}
+// If the page was left "Thinking" or "Your turn" by an earlier answer, an event that needs no speech clears it.
+function settle(){
+  if(M.state === 'thinking' || M.state === 'waiting'){ engineWait = null; reset('') }
+}
+let speakingEvent = null;             // the event being spoken now, so a question from the student can hold the lesson
+async function speakEvent(ev, lines){
+  lastSpoken = { ev, lines }; speakingEvent = ev;
+  const act = begin('read'); mark('read');
+  try{
+    for(const line of lines){
+      if(act.signal.aborted) break;
+      M.say(line);
+      await speakLines(act, [line], { quiet: true });
+    }
+  } finally { speakingEvent = null }
+  if(act.signal.aborted){ if(halted) interrupted = ev; return }
+  done(act);
+  sendAction({ type: 'speech_done', ref: ev.type, id: ev.id });
+}
+// The student asks their own question while the tutor is talking: hold the lesson (Resume says it again and goes on).
+function holdForQuestion(){ if(driver.mode !== 'legacy' && speakingEvent && !halted) engineHalt() }
+function enterEngineWait(ev){
+  const q = LS.state.question, act = begin(null);
+  engineWait = { id: ev.id != null ? str(ev.id) : (q ? q.id : ''), act };
+  act.signal.addEventListener('abort', () => { if(engineWait && engineWait.act === act) engineWait = null }, { once: true });
+  M.to('waiting', act.token, { caption: q ? q.text : '' });
+  if(fine.matches && (document.activeElement === document.body || !document.activeElement)) $('#askInput').focus();
+}
+// The student answered the engine's question, typed or spoken. The engine decides what happens next.
+function engineAnswer(text, act){
+  const w = engineWait;
+  if(!w || w.act !== act) return;
+  engineWait = null; $('#askInput').value = '';
+  bubble('user', text);
+  M.to('thinking', act.token, { caption: 'Thinking…' });
+  sendAction({ type: 'student_answer', id: w.id, text });
+}
+function engineHalt(){
+  if(halted) return;
+  halted = true; running = false; $('#pause').textContent = '▶ Resume';
+  sendAction({ type: 'stop' });
+}
+function engineResume(){
+  halted = false; running = true; $('#pause').textContent = '⏸ Pause';
+  sendAction({ type: 'resume' });
+  if(interrupted){ evq.unshift(interrupted); interrupted = null }                   // say again what was cut off
+  else if(LS.state.phase === 'waiting' && !engineWait) enterEngineWait({ id: LS.state.question && LS.state.question.id });
+  pump();
+}
+// Read and Repeat in an engine's lesson: say the last thing the tutor said again, or read what is on the board.
+function engineReplay(){
+  if(LS.state.phase === 'exam' || LS.state.phase === 'reviewing') return;
+  const lines = lastSpoken ? lastSpoken.lines : boardText();
+  if(!lines.length) return;
+  const act = begin('read'); mark('read');
+  speakLines(act, lines, { quiet: false });
+}
+function boardText(){
+  const t = LS.state.teaching, out = t.title ? [t.title] : [];
+  t.blocks.forEach(b => { const v = b.type === 'list' ? (b.items || []).join('. ') : str(b.text || b.term); if(v) out.push(v) });
+  return out;
+}
+
+// Today's lesson files: the lesson engine in this page decides what happens next. The exam card reports its answer and
+// its Continue button here; marking itself is /api/answer, called by markStep.
+const legacyDriver = {
+  mode: 'legacy',
+  send(a){
+    const act = lessonAct;
+    if(a.type === 'exam_answer'){
+      if(!act) return;
+      if(!studentAnswered(act, a.text)) act.early = a.text;     // still being read: it goes in as soon as the tutor waits
+    } else if(a.type === 'continue'){
+      if(!act) return;
+      act.continued = true;
+      if(act.continueGo) act.continueGo();
+    } else if(a.type === 'finish_summary') return api('/api/finish', { date: day(), summary: a.summary }).then(r => ({ ok: r.ok }));
+  },
+};
+/* ---------- mock engine: build and check the page with no backend ----------
+   Open the tutor at /?mock=1 to play a short lesson written in the future structured format. It talks to nothing.
+   /?mock=1&autoplay=0 loads the lesson but plays nothing, so a browser check (or you, from the console) can feed
+   events by hand: Classroom.dispatch({ type: 'teaching', title: '...', blocks: [...] }). Classroom.sent lists what
+   the page sent back. Not used in a real lesson. */
+const MOCK_LESSON = {
+  course: 'Security+ SY0-701', number: 4, title: 'Authentication and Access Control',
+  objectives: [{ id: '4.6', title: 'Implement and maintain identity and access management' }],
+  sections: [{ id: 'recall', name: 'Retrieval', minutes: 5 }, { id: 'teach', name: 'Teaching', minutes: 15 }, { id: 'exam', name: 'Exam practice', minutes: 10 }],
+};
+const MOCK_DIAGRAM = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 110"><rect width="560" height="110" fill="#ffffff"/>' +
+  '<g font-family="sans-serif" font-size="14" text-anchor="middle" fill="#1b2530">' +
+  '<rect x="10" y="25" width="165" height="60" rx="8" fill="#e8f0fe" stroke="#2b59c3"/><text x="92" y="60">Something you know</text>' +
+  '<rect x="197" y="25" width="165" height="60" rx="8" fill="#e6f4ea" stroke="#117a3d"/><text x="280" y="60">Something you have</text>' +
+  '<rect x="385" y="25" width="165" height="60" rx="8" fill="#fff4e0" stroke="#b06000"/><text x="467" y="60">Something you are</text></g></svg>';
+const MOCK_TEACHING = {
+  type: 'teaching', title: 'Authentication factors', objective: { id: '4.6', title: 'Implement and maintain identity and access management' },
+  blocks: [
+    { type: 'text', text: 'Authentication proves who you are before access is granted.' },
+    { type: 'definition', term: 'Multifactor authentication (MFA)', text: 'Using two or more different types of factor, such as a password plus a code from your phone.' },
+    { type: 'terms', items: [{ term: 'Something you know', text: 'password, PIN' }, { term: 'Something you have', text: 'token, phone, smart card' }, { term: 'Something you are', text: 'fingerprint, face' }] },
+    { type: 'diagram', svg: MOCK_DIAGRAM, alt: 'Three factor types: something you know, have and are' },
+    { type: 'example', text: 'Typing a password and then approving a prompt on your phone uses two different factors.' },
+    { type: 'exam_tip', text: 'Two passwords are not MFA. The exam wants two different types of factor.' },
+  ],
+  say: ['There are three classic types of factor: something you know, something you have, and something you are.', 'Multifactor means mixing types, not just asking twice.'],
+  progress: { pct: 40 },
+};
+const MOCK_EXAMS = [
+  { id: 'x1', objective: '4.6', kind: 'multiple_choice', number: 1, total: 2,
+    stem: 'A user enters a password and then approves a push notification on their registered phone. Which authentication factors are being used?',
+    options: ['Something you know and something you have', 'Something you are and something you know', 'Something you have and somewhere you are', 'Something you know only'],
+    key: 'A', why: 'The password is something you know. Approving the prompt on a registered phone is something you have.' },
+  { id: 'x2', objective: '4.6', kind: 'multiple_choice', number: 2, total: 2,
+    stem: "Which access control model assigns permissions according to a user's job function?",
+    options: ['Discretionary access control (DAC)', 'Mandatory access control (MAC)', 'Role-based access control (RBAC)', 'Attribute-based access control (ABAC)'],
+    key: 'C', why: 'RBAC grants permissions to roles, and users get the permissions of the roles they hold.' },
+];
+function createMockEngine(emit, opts){
+  const waiters = [], pending = [], KEEP = ['begin', 'speech_done', 'student_answer', 'skip', 'exam_answer', 'continue', 'resume'];
+  let paused = false, started = false;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  function waitFor(types, ms){
+    types = [].concat(types);
+    const i = pending.findIndex(a => types.includes(a.type));
+    if(i >= 0) return Promise.resolve(pending.splice(i, 1)[0]);
+    return new Promise(res => {
+      const w = { types, res, t: 0 };
+      if(ms) w.t = setTimeout(() => { waiters.splice(waiters.indexOf(w), 1); res(null) }, ms);
+      waiters.push(w);
+    });
+  }
+  function send(a){
+    if(a.type === 'stop') paused = true;
+    if(a.type === 'resume') paused = false;
+    if(a.type === 'begin' && !started){ started = true; if(opts.autoplay) run() }
+    if(a.type === 'finish_summary') return { ok: true };
+    const i = waiters.findIndex(w => w.types.includes(a.type));
+    if(i >= 0){ const [w] = waiters.splice(i, 1); clearTimeout(w.t); w.res(a) }
+    else if(KEEP.includes(a.type)) pending.push(a);
+  }
+  const gate = async () => { while(paused) await waitFor('resume') };
+  // Send an event. One that speaks is followed by the page's speech_done (or, failing that, a time-out) before the next.
+  async function play(ev){ await gate(); emit(ev); if(spokenLines(ev).length) await waitFor('speech_done', 25000) }
+  async function run(){
+    await play({ type: 'section_started', index: 0, progress: { pct: 4 } });
+    await play({ type: 'teaching', title: 'Quick recall', blocks: [{ type: 'text', text: "Before today's new material, one question from last time." }],
+      say: ["Welcome back. Before the new material, one quick question from last time."], progress: { pct: 8 } });
+    await play({ type: 'question', id: 'recall-1', text: 'What does the A in the CIA triad stand for?' });
+    await gate(); emit({ type: 'waiting_for_student', id: 'recall-1' });
+    const ans = await waitFor(['student_answer', 'skip']);
+    if(ans.type === 'student_answer'){
+      await gate(); emit({ type: 'student_answer_received', id: 'recall-1', text: ans.text });
+      emit({ type: 'evaluating', id: 'recall-1' }); await sleep(300);
+      if(/avail/i.test(ans.text)) await play({ type: 'teaching', say: ['Yes, availability. Good recall.'], progress: { pct: 16 } });
+      else await play({ type: 'remediating', id: 'recall-1', text: 'Not quite. The A is availability: systems and data are there when they are needed.', progress: { pct: 16 } });
+    } else await play({ type: 'teaching', progress: { pct: 16 } });
+    await play({ type: 'section_started', index: 1, progress: { pct: 20 } });
+    await play(MOCK_TEACHING);
+    await play({ type: 'section_started', index: 2, progress: { pct: 60 } });
+    for(const [n, x] of MOCK_EXAMS.entries()){
+      await play({ type: 'exam_question', id: x.id, objective: x.objective, kind: x.kind, number: x.number, total: x.total, stem: x.stem, options: x.options, progress: { pct: 60 + n * 15 } });
+      const a = await waitFor('exam_answer');
+      await gate();
+      emit({ type: 'answer_result', id: x.id, selected: a.key, correct: a.key === x.key, correct_key: x.key, explanation: x.why, progress: { pct: 75 + n * 15 } });
+      await waitFor('continue');
+    }
+    await gate(); emit({ type: 'lesson_completed' });
+  }
+  return {
+    driver: { mode: 'mock', send },
+    load(){ emit({ type: 'lesson_started', lesson: MOCK_LESSON }) },
+  };
+}
+const params = new URLSearchParams(location.search);
+const MOCK_MODE = params.get('mock') === '1';
+function startMock(){
+  const eng = createMockEngine(dispatch, { autoplay: params.get('autoplay') !== '0' });
+  useDriver(eng.driver);
+  eng.load();
+}
+// For the browser checks and for the console: feed events in, read the state and the actions back.
+window.Classroom = { dispatch, send: sendAction, sent, get state(){ return LS.state }, get mode(){ return driver.mode } };
+
+
+async function loadProgress(){
+  const box = $('#progress'); if(!box) return;
+  const r = await api('/api/progress?date=' + day());
+  box.replaceChildren(el('b', 'Progress'));
+  if(!r.ok){ box.append(el('p', 'Progress is unavailable.', 'tag')); return }
+  const titles = {};
+  ((L && L.domains) || []).forEach(d => titles[d.id] = d.title);
+  const groups = {};
+  r.data.objectives.forEach(o => { const k = String(o.id).split('.')[0]; (groups[k] = groups[k] || []).push(o) });
+  Object.keys(groups).forEach(k => {
+    box.append(el('p', 'Domain ' + k + ' · ' + (titles[k] || ''), 'tag'));
+    groups[k].forEach(o => box.append(el('div', o.id + ' ' + o.title + ': ' + o.status.replace(/_/g, ' '))));
+  });
+}
+
+/* ---------- notebook (server copy, localStorage as offline cache) ---------- */
+const COLORS = ['#f2b84b', '#4cc9a6', '#7fb4f5', '#e98a8a', '#c3a1ef', '#f0a56b', '#9ad66f', '#6fd0d6'];
+let notes = [], activeId = null, saveTimer = null;
+const newId = () => 'n-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+const current = () => notes.find(n => n.id === activeId);
+function seedNotes(){
+  const list = [{ id: newId(), title: 'Today', body: 'Lesson notes go here.\n\n☐ Finish the slides\n☐ Write a 3-line summary' }];
+  ((L && L.domains) || []).forEach(d => list.push({ id: newId(), title: d.id + ' · ' + d.title, body: '' }));
+  list.push({ id: newId(), title: 'Acronyms', body: '' });
+  return list;
+}
+async function loadNotes(){
+  const r = await api('/api/notes');
+  if(r.ok){
+    notes = r.data.notes || [];
+    if(!notes.length){ notes = seedNotes(); saveNotes() }
+    $('#saved').textContent = 'Saved';
+  } else {
+    notes = store.get(NB_CACHE, null) || seedNotes();
+    $('#saved').textContent = 'Offline: kept on this device';
+  }
+  activeId = notes[0] ? notes[0].id : null;
+  renderNote(); renderTabs(); cacheNotes();
+}
+function cacheNotes(){ store.set(NB_CACHE, notes) }
+function saveNotes(){
+  cacheNotes(); $('#saved').textContent = 'Saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const r = await api('/api/notes', { notes });
+    $('#saved').textContent = r.ok ? 'Saved' : 'Not saved: ' + (r.data.error || 'error') + ' (kept on this device)';
+  }, 500);
+}
+function renderTabs(){
+  const q = $('#search').value.trim().toLowerCase();
+  const tabs = $('#tabs'); tabs.replaceChildren();
+  notes.forEach((n, i) => {
+    const hit = !q || (n.title + ' ' + n.body).toLowerCase().includes(q);
+    const b = el('button', n.title || 'Untitled', 'tab' + (n.id === activeId ? ' active' : '') + (hit ? '' : ' hidden'));
+    b.style.background = COLORS[i % COLORS.length]; b.title = n.title || 'Untitled';
+    b.onclick = () => { flush(); activeId = n.id; renderNote(); renderTabs() };
+    tabs.append(b);
+  });
+  const add = el('button', '+', 'tab add'); add.title = 'New note'; add.onclick = newNote;
+  tabs.append(add);
+}
+function renderNote(){
+  const n = current(), has = !!n;
+  $('#noteTitle').disabled = $('#noteBody').disabled = !has;
+  $('#noteTitle').value = n ? n.title : ''; $('#noteBody').value = n ? n.body : '';
+  updateWc();
+}
+function updateWc(){ const t = $('#noteBody').value.trim(); $('#wc').textContent = (t ? t.split(/\s+/).length : 0) + ' words' }
+function flush(){ const n = current(); if(!n) return; n.title = $('#noteTitle').value; n.body = $('#noteBody').value }
+function queueSave(){ const n = current(); if(!n) return; flush(); updateWc(); saveNotes() }
+function newNote(){
+  flush();
+  const n = { id: newId(), title: '', body: '' };
+  notes.push(n); activeId = n.id;
+  renderNote(); renderTabs(); saveNotes(); $('#noteTitle').focus();
+}
+function insert(text){
+  const t = $('#noteBody'); if(t.disabled) return;
+  const s = t.selectionStart, e = t.selectionEnd;
+  t.value = t.value.slice(0, s) + text + t.value.slice(e);
+  t.selectionStart = t.selectionEnd = s + text.length; t.focus(); queueSave();
+}
+$('#noteTitle').oninput = queueSave;
+$('#noteBody').oninput = queueSave;
+$('#newNote').onclick = newNote;
+$('#search').oninput = renderTabs;
+$('#stamp').onclick = () => {
+  const stage = slides[idx] ? stages[slides[idx].stage].name : '';
+  const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  insert(`[${t} · ${stage}] `);
+};
+$('#check').onclick = () => { const t = $('#noteBody'); insert((t.value && !t.value.endsWith('\n') ? '\n' : '') + '☐ ') };
+$('#noteBody').addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  const t = e.target, pos = t.selectionStart, line = t.value.slice(t.value.lastIndexOf('\n', pos - 1) + 1, pos);
+  if(line.startsWith('☐ ') || line.startsWith('☑ ')){
+    e.preventDefault();
+    if(line.trim().length <= 1){ const st = pos - line.length; t.value = t.value.slice(0, st) + t.value.slice(pos); t.selectionStart = t.selectionEnd = st; queueSave(); return }
+    insert('\n☐ ');
+  }
+});
+$('#noteBody').addEventListener('click', e => {   // click a checkbox to tick it
+  const t = e.target, pos = t.selectionStart, ls = t.value.lastIndexOf('\n', pos - 1) + 1;
+  if(pos > ls && pos <= ls + 1 && '☐☑'.includes(t.value[ls])){
+    t.value = t.value.slice(0, ls) + (t.value[ls] === '☐' ? '☑' : '☐') + t.value.slice(ls + 1);
+    t.selectionStart = t.selectionEnd = pos; queueSave();
+  }
+});
+$('#del').onclick = () => {
+  const n = current(); if(!n) return;
+  if(!confirm(`Delete "${n.title || 'Untitled'}"?`)) return;
+  const i = notes.indexOf(n); notes.splice(i, 1);
+  activeId = notes[Math.max(0, i - 1)] ? notes[Math.max(0, i - 1)].id : null;
+  renderNote(); renderTabs(); saveNotes();
+};
+$('#export').onclick = () => {
+  flush();
+  const md = notes.map(n => `# ${n.title || 'Untitled'}\n\n${n.body}\n`).join('\n---\n\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+  a.download = 'classroom-notes-' + localDate() + '.md'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+window.addEventListener('beforeunload', () => { flush(); cacheNotes() });
+
+/* ---------- resizable split ---------- */
+(function(){
+  const sp = $('#splitter'), lay = $('#layout');
+  const saved = store.get(NB_W, null); if(saved) lay.style.setProperty('--nb-w', saved + 'px');
+  sp.addEventListener('pointerdown', e => {
+    sp.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const r = lay.getBoundingClientRect();
+      const w = Math.max(300, Math.min(r.width * 0.6, r.right - 12 - ev.clientX));
+      lay.style.setProperty('--nb-w', w + 'px'); store.set(NB_W, Math.round(w));
+    };
+    const up = () => { sp.removeEventListener('pointermove', move); sp.removeEventListener('pointerup', up) };
+    sp.addEventListener('pointermove', move); sp.addEventListener('pointerup', up);
+  });
+})();
+
+/* ---------- header ---------- */
+function tick(){
+  const now = new Date();
+  $('#clock').textContent = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  if(L && L.exam_date){ const ex = new Date(L.exam_date + 'T00:00:00'); $('#examDays').textContent = Math.max(0, Math.ceil((ex - now) / 864e5)) }
+}
+setInterval(tick, 30000);
+
+/* ---------- load ---------- */
+const objTitles = {};                 // objective id -> title, from /api/progress (the lesson file only names the ids)
+const dayLabel = d => { const t = new Date(d + 'T00:00:00'); return isNaN(t) ? d : t.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) };
+async function loadObjectiveTitles(ids){
+  if(!ids.length) return;
+  const d = day(), r = await api('/api/progress?date=' + d);
+  if(!r.ok || d !== day() || !LS.state.objectives.length) return;      // not there, or the date changed meanwhile
+  (r.data.objectives || []).forEach(o => { objTitles[o.id] = o.title });
+  lsApply({ type: 'ui_objectives', objectives: ids.map(id => ({ id, title: objTitles[id] || '' })) });
+}
+async function loadLesson(){
+  if(MOCK_MODE) return;                                              // the mock engine supplies the lesson
+  reset('');   // whatever the last lesson was doing stops first
+  quizMode = false; curStage = -1; shownSlide = -1;
+  const r = await api('/api/lesson?date=' + day());
+  useDriver(legacyDriver);
+  if(!r.ok){
+    L = null; slides = []; stages = []; steps = []; timerActive = false;
+    lsApply({ type: 'ui_reset' });
+    $('#lessonTitle').textContent = $('#lhTitle').textContent = 'No lesson for this date';
+    $('#msg').textContent = r.data.error || 'Could not load the lesson'; $('#msg').hidden = false;
+    $('#stepper').replaceChildren(); $('#board').replaceChildren(el('p', r.data.error || 'No lesson for this date.'));
+    reset(''); $('#intro').hidden = true; $('#next').disabled = $('#prev').disabled = true;
+    $('#stageLabel').textContent = 'Stage'; $('#progress') && $('#progress').remove();
+    return;
+  }
+  $('#msg').hidden = true; $('#next').disabled = $('#prev').disabled = false;
+  buildFrom(r.data);
+  steps = buildSteps(slides, L.scripts, L.quiz);
+  engine = lessonInit(); lessonAct = null;
+  const meta = lessonMeta(r.data.markdown);
+  // Today's lesson file has no course name or lesson number, so the header shows the date and the objective ids it does have.
+  lsApply({ type: 'lesson_started', lesson: { label: dayLabel(day()), title: r.data.title || 'Lesson', practice: meta.practice,
+    objectives: meta.objectives.map(id => ({ id, title: objTitles[id] || '' })),
+    sections: stages.map(x => ({ name: x.name, minutes: x.minutes })).concat([{ name: 'Quiz', minutes: 0 }]) } });
+  renderStepper(); showSlideAt(0); tick();
+  $('#intro').hidden = false;
+  loadObjectiveTitles(meta.objectives);
+  if(!$('#chatPanel').open) $('#chatlog').replaceChildren();
+}
+$('#load').onclick = async () => { rememberToken(); await loadLesson(); loadNotes() };
+$('#date').onchange = () => loadLesson();
+$('#tok').value = (() => { try { return localStorage.getItem(TK) || '' } catch(e){ return '' } })();
+$('#date').value = localDate();
+$('#start').onclick = () => {
+  // The click also unlocks audio for the browser's voice, which browsers allow only after a click.
+  $('#intro').hidden = true; renderStatus();
+  if(driver.mode !== 'legacy') return sendAction({ type: 'begin' });   // an engine takes it from here
+  const welcome = `Welcome to today's lesson: ${L ? L.title : 'Security plus'}. I'll take you through it step by step. Hold the mic to ask me anything.`;
+  const act = begin(null);
+  lessonAct = act;
+  M.say(welcome);
+  speakLines(act, [welcome], { quiet: true }).then(() => lessonDispatch(act, { type: 'start', i: 0 }));
+};
+(async () => {
+  const s = await api('/api/voice/status');
+  if(s.ok) voiceCfg = s.data;
+  if(MOCK_MODE){ startMock(); await loadNotes(); return }
+  await loadLesson(); await loadNotes();
+})();
+
+/* ---------- notes drawer, history, theme ---------- */
+function setNotes(open){
+  document.body.classList.toggle('nb-open', open);
+  $('#bNotes').setAttribute('aria-expanded', open ? 'true' : 'false');
+  store.set('classroom.nbOpen', open);
+}
+$('#bNotes').onclick = () => setNotes(!document.body.classList.contains('nb-open'));
+$('#bHist').onclick = () => { const c = $('#chatPanel'); c.open = !c.open; if(c.open) c.scrollIntoView({ block: 'nearest' }) };
+$('#chatPanel').addEventListener('toggle', () => $('#bHist').setAttribute('aria-expanded', $('#chatPanel').open ? 'true' : 'false'));
+setNotes(!!store.get('classroom.nbOpen', false));
+(function(){
+  const order = ['auto', 'light', 'dark']; let i = Math.max(0, order.indexOf(store.get('classroom.theme', 'auto')));
+  const paint = () => { const t = order[i], r = document.documentElement;
+    if(t === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
+    $('#bTheme').textContent = 'Theme: ' + t.charAt(0).toUpperCase() + t.slice(1); };
+  $('#bTheme').onclick = () => { i = (i + 1) % 3; store.set('classroom.theme', order[i]); paint() };
+  paint();
+})();
+
+/* ---------- launch screen ---------- */
+(function(){
+  const L = $('#launch'); if(!L) return;
+  const q = new URLSearchParams(location.search);
+  // automated browsers skip it (tests click straight away) unless a test asks for it with ?launch=1
+  if(q.get('launch') === '0' || (navigator.webdriver && q.get('launch') !== '1')){ L.remove(); return }
+  const t0 = Date.now(), MIN = 1700, MAX = 4500;
+  let done = false;
+  const finish = () => { if(done) return; done = true; L.classList.add('out');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTimeout(() => L.remove(), still ? 0 : 500) };
+  const ready = () => !/^Loading/.test($('#lhTitle').textContent);
+  (function tick(){ if(done) return; const t = Date.now() - t0;
+    if(t >= MAX || (t >= MIN && ready())) finish(); else setTimeout(tick, 100) })();
+  addEventListener('keydown', finish, { once: true });
+  addEventListener('pointerdown', finish, { once: true });
+})();
+</script>
+</body>
+</html>
